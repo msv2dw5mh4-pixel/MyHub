@@ -1,5 +1,5 @@
 const DB_NAME = "myhub";
-const DB_VERSION = 19;
+const DB_VERSION = 20;
 
 const STORES = {
   settings: { keyPath: "key" },
@@ -39,6 +39,9 @@ const STORES = {
   peopleGroups: { keyPath: "id" },
   peopleRelations: { keyPath: "id" },
   peopleEvents: { keyPath: "id" },
+  meals: { keyPath: "id" },
+  mealPlans: { keyPath: "id" },
+  shoppingItems: { keyPath: "id" },
   moduleData: { keyPath: "id" }
 };
 
@@ -139,7 +142,7 @@ export async function exportDatabase() {
   return {
     app: "MyHub",
     backupFormat: 2,
-    appVersion: "V22",
+    appVersion: "V28",
     dbVersion: DB_VERSION,
     exportedAt: new Date().toISOString(),
     totalItems,

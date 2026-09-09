@@ -19,7 +19,9 @@ const SOURCES = [
   { store:"sportGoals", route:"sport", icon:"🏅", type:"Objectif sport", title:["name","title","sport","exerciseName"], detail:["notes"] },
   { store:"sportPrograms", route:"sport", icon:"🏋️", type:"Programme sport", title:["name","title"], detail:["description","notes"] },
   { store:"calendarEvents", route:"planning", icon:"📅", type:"Événement", title:["title","name"], detail:["description","location","notes"] },
-  { store:"trackerItems", route:"tracker", icon:"✅", type:"Tracker", title:["name"], detail:["unit","automationMetric"] }
+  { store:"trackerItems", route:"tracker", icon:"✅", type:"Tracker", title:["name"], detail:["unit","automationMetric"] },
+  { store:"meals", route:"meals", icon:"🍽️", type:"Repas", title:["name"], detail:["cuisine","notes"] },
+  { store:"shoppingItems", route:"shopping", icon:"🛒", type:"Course", title:["name"], detail:["category","note","unit"] }
 ];
 
 function normalize(value="") {
@@ -39,9 +41,20 @@ function firstValue(row, keys=[]) {
 
 function searchableText(row) {
   const values = [];
+  const collect = value => {
+    if (value === null || value === undefined) return;
+    if (["string","number","boolean"].includes(typeof value)) { values.push(String(value)); return; }
+    if (Array.isArray(value)) { value.forEach(collect); return; }
+    if (typeof value === "object") {
+      Object.entries(value).forEach(([key, nested]) => {
+        if (["photo","fileData","content","dataUrl"].includes(key)) return;
+        collect(nested);
+      });
+    }
+  };
   Object.entries(row || {}).forEach(([key,value]) => {
     if (["photo","fileData","content","dataUrl"].includes(key)) return;
-    if (["string","number","boolean"].includes(typeof value)) values.push(String(value));
+    collect(value);
   });
   return normalize(values.join(" "));
 }
@@ -163,10 +176,10 @@ export async function renderSearch(container) {
       <div class="search-hero app-panel">
         <p class="eyebrow">RECHERCHE GLOBALE</p>
         <h2>Retrouver n'importe quoi dans MyHub</h2>
-        <p class="muted">Tâches, personnes, biens, documents, projets, objectifs, plantes, aquariums, sport, idées…</p>
+        <p class="muted">Tâches, personnes, biens, repas, courses, documents, projets, objectifs, plantes, aquariums, sport, idées…</p>
         <div class="global-search-box">
           <span>⌕</span>
-          <input id="global-search-input" type="search" value="${escapeHtml(query)}" placeholder="Ex : Paul, bateau, village, iPhone…" autocomplete="off" enterkeyhint="search">
+          <input id="global-search-input" type="search" value="${escapeHtml(query)}" placeholder="Ex : Paul, poulet, pâtes, bateau, iPhone…" autocomplete="off" enterkeyhint="search">
           <button class="icon-btn" id="global-search-clear" aria-label="Effacer">×</button>
         </div>
       </div>

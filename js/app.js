@@ -14,6 +14,8 @@ import { renderProjects, requestNewProject } from "./modules/projects.js";
 import { renderLearning, requestNewLearningTopic } from "./modules/learning.js";
 import { renderIdeas, requestNewIdea } from "./modules/ideas.js";
 import { renderPeople, requestNewPerson } from "./modules/people.js";
+import { renderMeals, requestNewMeal, ensureMealsSeeded } from "./modules/meals.js";
+import { renderShopping, requestNewShoppingItem } from "./modules/shopping.js";
 import { renderModules } from "./modules/modules.js";
 import { renderSettings } from "./modules/settings.js";
 import { renderSearch } from "./modules/search.js";
@@ -41,6 +43,8 @@ const routes = {
   learning: { title: "Apprentissage", render: renderLearning },
   ideas: { title: "Idées", render: renderIdeas },
   people: { title: "Personnes", render: renderPeople },
+  meals: { title: "Repas", render: renderMeals },
+  shopping: { title: "Courses", render: renderShopping },
   tasks: { title: "Tâches", render: renderTasks },
   stock: { title: "Stock", render: renderStock },
   tracker: { title: "Tracker", render: renderTracker },
@@ -167,6 +171,17 @@ function showQuickAdd() {
         <div class="task-main"><div class="task-title">Capturer une idée</div><div class="task-desc">Ajouter une idée à l'Inbox pour la traiter plus tard.</div></div>
       </button>
 
+
+      <button class="list-item" id="quick-add-meal" style="width:100%;text-align:left;cursor:pointer">
+        <div style="font-size:24px">🍽️</div>
+        <div class="task-main"><div class="task-title">Nouveau repas</div><div class="task-desc">Ajouter un plat à la bibliothèque Repas.</div></div>
+      </button>
+
+      <button class="list-item" id="quick-add-shopping" style="width:100%;text-align:left;cursor:pointer">
+        <div style="font-size:24px">🛒</div>
+        <div class="task-main"><div class="task-title">Article de courses</div><div class="task-desc">Ajouter rapidement quelque chose à acheter.</div></div>
+      </button>
+
       <button class="list-item" id="quick-add-person" style="width:100%;text-align:left;cursor:pointer">
         <div style="font-size:24px">👥</div>
         <div class="task-main"><div class="task-title">Nouvelle personne</div><div class="task-desc">Ajouter quelqu'un, ses groupes, son anniversaire et tes notes.</div></div>
@@ -213,6 +228,8 @@ function showQuickAdd() {
   document.getElementById("quick-add-learning").addEventListener("click", () => { closeModal(); requestNewLearningTopic(); });
   document.getElementById("quick-add-idea").addEventListener("click", () => { closeModal(); requestNewIdea(); });
   document.getElementById("quick-add-person").addEventListener("click", () => { closeModal(); requestNewPerson(); });
+  document.getElementById("quick-add-meal").addEventListener("click", () => { closeModal(); requestNewMeal(); });
+  document.getElementById("quick-add-shopping").addEventListener("click", () => { closeModal(); requestNewShoppingItem(); });
 }
 
 document.querySelectorAll("[data-route]").forEach(btn => {
@@ -230,6 +247,7 @@ window.addEventListener("myhub:data-changed", async () => {
     await syncTrackerForToday();
     await syncLivingCareTasks();
     await syncPeopleReminderTasks();
+    await ensureMealsSeeded();
   } catch (error) {
     console.error("Synchronisation Tracker :", error);
   }
@@ -255,6 +273,7 @@ if ("serviceWorker" in navigator) {
     await syncTrackerForToday();
     await syncLivingCareTasks();
     await syncPeopleReminderTasks();
+    await ensureMealsSeeded();
   } catch (error) {
     console.error("Synchronisation MyHub :", error);
   }

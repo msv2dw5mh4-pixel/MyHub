@@ -18,6 +18,8 @@ import { getLivingSummary } from "./living.js";
 import { syncLivingCareTasks } from "../core/living_tasks.js";
 import { getBackupStatus } from "../core/backup.js";
 import { getPeopleSummary } from "./people.js";
+import { getMealsSummary } from "./meals.js";
+import { getShoppingSummary } from "./shopping.js";
 
 function formatMoney(value) {
   return new Intl.NumberFormat("fr-FR", {
@@ -117,7 +119,9 @@ export async function renderDashboard(container) {
     globalStats,
     living,
     backup,
-    people
+    people,
+    meals,
+    shopping
   ] = await Promise.all([
     getPlanningSummary(),
     getPlanningDayItems(),
@@ -135,7 +139,9 @@ export async function renderDashboard(container) {
     getGlobalStatsSummary(),
     getLivingSummary(),
     getBackupStatus(),
-    getPeopleSummary()
+    getPeopleSummary(),
+    getMealsSummary(),
+    getShoppingSummary()
   ]);
 
   const today = new Intl.DateTimeFormat("fr-FR", {
@@ -343,6 +349,20 @@ export async function renderDashboard(container) {
         ? `${people.upcoming} rappel${people.upcoming === 1 ? "" : "s"} à surveiller`
         : `${people.groups} groupe${people.groups === 1 ? "" : "s"}`,
       route: "people"
+    },
+    {
+      icon: "🍽️",
+      name: "Repas",
+      value: `${meals.plannedWeek} planifié${meals.plannedWeek === 1 ? "" : "s"}`,
+      sub: `${meals.library} repas · ${meals.favorites} favoris`,
+      route: "meals"
+    },
+    {
+      icon: "🛒",
+      name: "Courses",
+      value: shopping.todo ? `${shopping.todo} à acheter` : "Liste à jour",
+      sub: shopping.total ? `${shopping.done} pris sur ${shopping.total}` : "Liste vide",
+      route: "shopping"
     },
     {
       icon: "💡",

@@ -1,0 +1,21 @@
+# Sauvegardes / exports personnels MyHub
+*Backup*.json
+*backup*.json
+*Export*.json
+*export*.json
+MyHub_*.json
+private/
+backups/
+exports/
+
+# Fichiers personnels à ne jamais publier
+*.numbers
+*.xlsx
+*.xls
+*.pdf
+*.zip
+.DS_Store
+
+# Environnement
+.vscode/
+node_modules/

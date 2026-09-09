@@ -8,6 +8,8 @@ export const modules = [
   { id: "projects", name: "Projets", icon: "🏠", route: "projects", enabled: true, description: "Gros projets regroupant tâches, budget, planning et documents." },
   { id: "learning", name: "Apprentissage", icon: "🧠", route: "learning", enabled: true, description: "Compétences, formations, sessions et progression mesurable." },
   { id: "people", name: "Personnes", icon: "👥", route: "people", enabled: true, description: "Personnes, groupes personnalisés, relations, anniversaires, événements et notes recherchables." },
+  { id: "meals", name: "Repas", icon: "🍽️", route: "meals", enabled: true, description: "Bibliothèque de 100 repas modifiables, favoris et planning de la semaine." },
+  { id: "shopping", name: "Courses", icon: "🛒", route: "shopping", enabled: true, description: "Liste de courses manuelle ou générée automatiquement depuis les repas planifiés." },
   { id: "ideas", name: "Idées", icon: "💡", route: "ideas", enabled: true, description: "Inbox rapide pour capturer puis transformer une idée en action." },
   { id: "tasks", name: "Tâches", icon: "✓", route: "tasks", enabled: true, description: "To-do list, échéances et rappels." },
   { id: "stock", name: "Stock", icon: "📦", route: "stock", enabled: true, description: "Objets, achat, vente, marge et statistiques." },

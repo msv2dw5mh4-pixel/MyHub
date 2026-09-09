@@ -1,4 +1,4 @@
-const CACHE = "myhub-v27-ux-dashboard";
+const CACHE = "myhub-v28-repas-courses";
 
 const ASSETS = [
   "./",
@@ -20,6 +20,7 @@ const ASSETS = [
   "./css/ideas.css",
   "./css/search.css",
   "./css/people.css",
+  "./css/meals.css",
   "./js/app.js",
   "./js/core/db.js",
   "./js/core/modules.js",
@@ -34,6 +35,7 @@ const ASSETS = [
   "./js/core/living_tasks.js",
   "./js/core/backup.js",
   "./js/core/people_tasks.js",
+  "./js/core/meal_seed.js",
   "./js/modules/dashboard.js",
   "./js/modules/stats.js",
   "./js/modules/tasks.js",
@@ -53,6 +55,8 @@ const ASSETS = [
   "./js/modules/settings.js",
   "./js/modules/search.js",
   "./js/modules/people.js",
+  "./js/modules/meals.js",
+  "./js/modules/shopping.js",
   "./manifest.webmanifest",
   "./assets/icons/icon-192.svg",
   "./assets/icons/icon-512.svg"
