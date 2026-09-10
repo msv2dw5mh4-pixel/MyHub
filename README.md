@@ -41,3 +41,13 @@ Nouveaux stores :
 - `shoppingItems`
 
 Les données ne sont pas stockées dans le dépôt GitHub.
+
+
+## V28.1 — Hotfix Tâches
+
+- création de tâche rendue indépendante des modules liés ;
+- lecture tolérante des objectifs, projets, biens, personnes, aquariums et plantes ;
+- retour visuel pendant l'enregistrement ;
+- message d'erreur explicite si IndexedDB refuse l'écriture ;
+- meilleure gestion des changements de version IndexedDB ;
+- aucun changement de schéma : DB version 20 conservée.

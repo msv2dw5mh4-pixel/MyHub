@@ -32,6 +32,15 @@ import { dismissPeopleReminderTask, syncPeopleReminderTasks } from "../core/peop
 let activeFilter = "today";
 let taskSearch = "";
 
+async function safeGetAll(storeName) {
+  try {
+    return await getAll(storeName);
+  } catch (error) {
+    console.warn(`[Tâches] Lecture impossible du store ${storeName}:`, error);
+    return [];
+  }
+}
+
 function taskState(task) {
   if (task.done) return "done";
 
@@ -469,12 +478,12 @@ export async function renderTasks(container) {
 export async function showAddTaskModal(preset = {}) {
   const editing = Boolean(preset?.id);
   const [objectivesRaw, projectsRaw, assetsRaw, aquariumsRaw, plantsRaw, peopleRaw] = await Promise.all([
-    getAll("objectives"),
-    getAll("projects"),
-    getAll("maintenanceAssets"),
-    getAll("livingAquariums"),
-    getAll("livingPlants"),
-    getAll("people")
+    safeGetAll("objectives"),
+    safeGetAll("projects"),
+    safeGetAll("maintenanceAssets"),
+    safeGetAll("livingAquariums"),
+    safeGetAll("livingPlants"),
+    safeGetAll("people")
   ]);
 
   const objectives = objectivesRaw
@@ -612,7 +621,7 @@ export async function showAddTaskModal(preset = {}) {
 
       <div class="actions">
         <button type="button" class="ghost-btn" id="cancel-task">Annuler</button>
-        <button class="primary-btn" type="submit">${editing ? "Enregistrer" : "Créer"}</button>
+        <button class="primary-btn" id="task-submit" type="submit">${editing ? "Enregistrer" : "Créer"}</button>
       </div>
     </form>
   `);
@@ -648,15 +657,34 @@ export async function showAddTaskModal(preset = {}) {
       updatedAt: new Date().toISOString()
     };
 
-    await putOne("tasks", task);
+    const submitButton = document.getElementById("task-submit");
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = editing ? "Enregistrement…" : "Création…";
+    }
 
-    closeModal();
+    try {
+      if (!task.title) {
+        throw new Error("Le nom de la tâche est obligatoire.");
+      }
 
-    window.dispatchEvent(
-      new CustomEvent("myhub:navigate", { detail: "tasks" })
-    );
+      await putOne("tasks", task);
 
-    window.dispatchEvent(new CustomEvent("myhub:data-changed"));
+      closeModal();
+
+      window.dispatchEvent(
+        new CustomEvent("myhub:navigate", { detail: "tasks" })
+      );
+
+      window.dispatchEvent(new CustomEvent("myhub:data-changed"));
+    } catch (error) {
+      console.error("[Tâches] Échec de l'enregistrement :", error);
+      alert(`Impossible d'enregistrer la tâche. ${error?.message || "Réessaie après avoir rechargé MyHub."}`);
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = editing ? "Enregistrer" : "Créer";
+      }
+    }
   });
 }
 

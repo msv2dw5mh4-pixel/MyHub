@@ -61,8 +61,21 @@ export function getDb() {
         });
       };
 
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        db.onversionchange = () => {
+          db.close();
+          dbPromise = null;
+        };
+        resolve(db);
+      };
+      request.onblocked = () => {
+        console.warn("MyHub IndexedDB attend la fermeture d'une ancienne version de l'application.");
+      };
+      request.onerror = () => {
+        dbPromise = null;
+        reject(request.error);
+      };
     });
   }
   return dbPromise;
