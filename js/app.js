@@ -1,3 +1,4 @@
+import "./core/task_modal_guard.js";
 import { renderDashboard } from "./modules/dashboard.js";
 import { renderStats } from "./modules/stats.js";
 import { renderTasks, showAddTaskModal } from "./modules/tasks.js";

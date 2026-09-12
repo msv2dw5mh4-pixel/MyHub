@@ -1,4 +1,4 @@
-const CACHE = "myhub-v28-1-tasks-fix";
+const CACHE = "myhub-v28-2-tasks-restore-fix";
 
 const ASSETS = [
   "./",
@@ -25,6 +25,7 @@ const ASSETS = [
   "./js/core/db.js",
   "./js/core/modules.js",
   "./js/core/ui.js",
+  "./js/core/task_modal_guard.js",
   "./js/core/objective_tasks.js",
   "./js/core/maintenance_tasks.js",
   "./js/core/document_tasks.js",
