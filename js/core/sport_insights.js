@@ -1,5 +1,11 @@
 import { getAll } from "./db.js";
 import { todayISO } from "./ui.js";
+import {
+  SPORT_CATALOG,
+  sessionSportId,
+  sportLabel,
+  sportIcon
+} from "./sport_catalog.js";
 
 function localDate(dateString) {
   return new Date(`${dateString}T12:00:00`);
@@ -29,13 +35,11 @@ function normalize(value = "") {
 }
 
 function isRun(session) {
-  const s = normalize(session.activityType || session.programName || "");
-  return s.includes("course") || s.includes("running") || s.includes("run");
+  return sessionSportId(session) === "running";
 }
 
 function isSwim(session) {
-  const s = normalize(session.activityType || session.programName || "");
-  return s.includes("natation") || s.includes("nage") || s.includes("swim");
+  return sessionSportId(session) === "swimming";
 }
 
 function e1rm(weight, reps) {
@@ -181,7 +185,40 @@ export async function getSportRecords() {
     })
     .sort((a,b) => a.name.localeCompare(b.name, "fr"));
 
-  return { running, swimming, strength };
+  const activitySessions = sessions.filter(session =>
+    session.status === "completed" &&
+    session.type === "activity"
+  );
+
+  const otherSports = SPORT_CATALOG
+    .filter(sport => !["running","swimming","strength","other"].includes(sport.id))
+    .map(sport => {
+      const rows = activitySessions.filter(session => sessionSportId(session) === sport.id);
+      if (!rows.length) return null;
+
+      const longest = [...rows].sort((a,b) => Number(b.duration || 0) - Number(a.duration || 0))[0];
+      const farthest = [...rows]
+        .filter(row => Number(row.distanceKm || 0) > 0)
+        .sort((a,b) => Number(b.distanceKm || 0) - Number(a.distanceKm || 0))[0] || null;
+
+      return {
+        sportId: sport.id,
+        sport: sport.label,
+        icon: sport.icon,
+        sessions: rows.length,
+        totalMinutes: rows.reduce((sum,row) => sum + Number(row.duration || 0), 0),
+        longestMinutes: Number(longest?.duration || 0),
+        longestDate: longest?.date || "",
+        longestSessionId: longest?.id || "",
+        farthestKm: Number(farthest?.distanceKm || 0),
+        farthestDate: farthest?.date || "",
+        farthestSessionId: farthest?.id || ""
+      };
+    })
+    .filter(Boolean)
+    .sort((a,b) => a.sport.localeCompare(b.sport, "fr"));
+
+  return { running, swimming, strength, otherSports };
 }
 
 function weekStats(sessions, sets, startDate) {

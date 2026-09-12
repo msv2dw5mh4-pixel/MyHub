@@ -10,6 +10,15 @@ import {
   todayISO
 } from "./ui.js";
 
+import {
+  canonicalSportId,
+  goalSportId,
+  sessionSportId,
+  sameSport,
+  sportLabel,
+  sportIcon as catalogSportIcon
+} from "./sport_catalog.js";
+
 function normalize(value = "") {
   return String(value)
     .normalize("NFD")
@@ -70,19 +79,16 @@ function paceLabel(minutes, swim = false) {
 }
 
 function isSwimSport(sport) {
-  const value = normalize(sport);
-  return value.includes("natation") || value.includes("nage") || value.includes("swim");
+  return canonicalSportId(sport) === "swimming";
 }
 
 function sportIcon(sport, goalType = "performance") {
   if (["strength","strength_multi"].includes(goalType)) return "🏋️";
-  return isSwimSport(sport) ? "🏊" : "🏃";
+  return catalogSportIcon(sport);
 }
 
 function sportMatches(session, sportName) {
-  const a = normalize(session.activityType || session.programName || "");
-  const b = normalize(sportName || "");
-  return a && b && (a.includes(b) || b.includes(a));
+  return sessionSportId(session) === canonicalSportId(sportName);
 }
 
 function phaseForRatio(ratio) {
@@ -487,7 +493,8 @@ function buildPlanSession(goal, date, index, totalDates, slotIndex, planId) {
     planId,
     goalId: goal.id,
     goalType: goal.goalType,
-    sport: goal.sport || (["strength","strength_multi"].includes(goal.goalType) ? "Musculation" : ""),
+    sportId: goalSportId(goal),
+    sport: sportLabel(goalSportId(goal)),
     exerciseName: goal.exerciseName || "",
     date,
     weekIndex: Math.floor(Math.max(0, diffDays(goal.startDate, date)) / 7) + 1,
@@ -621,7 +628,8 @@ export async function generateSportPlan(goal, options = {}) {
       id: uid("sport_plan"),
       goalId: goal.id,
       goalType: goal.goalType,
-      sport: goal.sport || "Musculation",
+      sportId: goalSportId(goal),
+      sport: sportLabel(goalSportId(goal)),
       name: `Programme · ${goal.name || goal.sport || goal.exerciseName || "Objectif"}`,
       startDate: goal.startDate || todayISO(),
       deadline: goal.deadline,

@@ -34,6 +34,18 @@ import {
   getWeeklyTrainingLoad
 } from "../core/sport_insights.js";
 
+import {
+  SPORT_CATALOG,
+  canonicalSportId,
+  sportLabel,
+  sportIcon as catalogSportIcon,
+  sportSupportsDistance,
+  sportDefaultUnit,
+  sportSelectOptions,
+  goalSportId,
+  ensureSportIdentityMigration
+} from "../core/sport_catalog.js";
+
 let currentView = "today";
 let currentSessionId = null;
 let lastContainer = null;
@@ -42,6 +54,7 @@ let workoutTimerId = null;
 export async function renderSport(container) {
   lastContainer = container;
   container.innerHTML = `<section class="sport-shell" id="sport-shell"></section>`;
+  await ensureSportIdentityMigration();
   await syncSportPlanTasks();
   await renderCurrentView();
 }
@@ -1257,8 +1270,15 @@ async function showActivityModal(preset = {}) {
     .filter(goal => goal.active !== false && goal.goalType === "performance")
     .sort((a,b) => String(a.deadline || "9999-12-31").localeCompare(String(b.deadline || "9999-12-31")));
 
-  const presetGoalId = preset.goalId || "";
+  const presetGoalId = preset.goalId || preset.sportGoalId || "";
   const presetGoal = goals.find(goal => goal.id === presetGoalId);
+  const initialSportId = canonicalSportId(
+    preset.sportId ||
+    preset.activityType ||
+    presetGoal?.sportId ||
+    presetGoal?.sport ||
+    "running"
+  );
 
   openModal(`
     <div class="modal-head">
@@ -1270,6 +1290,14 @@ async function showActivityModal(preset = {}) {
     </div>
 
     <form class="form-grid" id="sport-activity-form">
+      <div class="field">
+        <label>Sport</label>
+        <select id="sport-activity-sport" name="sportId" required>
+          ${sportSelectOptions(initialSportId)}
+        </select>
+        <small class="muted">Le sport choisi relie automatiquement l'activité aux Records, Objectifs, Programmes et au Tracker.</small>
+      </div>
+
       ${
         goals.length
           ? `
@@ -1278,28 +1306,20 @@ async function showActivityModal(preset = {}) {
               <select name="goalId" id="sport-activity-goal">
                 <option value="">Détection automatique / aucun</option>
                 ${goals.map(goal => `
-                  <option value="${goal.id}" ${goal.id === presetGoalId ? "selected" : ""}>
-                    ${escapeHtml(goal.name || goal.sport)}
+                  <option
+                    value="${goal.id}"
+                    data-sport-id="${goalSportId(goal)}"
+                    ${goal.id === presetGoalId ? "selected" : ""}
+                  >
+                    ${catalogSportIcon(goalSportId(goal))} ${escapeHtml(goal.name || goal.sport)}
                   </option>
                 `).join("")}
               </select>
-              <small class="muted">Si une séance du programme est prévue autour de cette date, MyHub la validera automatiquement.</small>
+              <small class="muted">Si une séance du programme est prévue à ±3 jours, MyHub peut la valider automatiquement.</small>
             </div>
           `
           : ""
       }
-
-      <div class="field">
-        <label>Sport / activité</label>
-        <input
-          id="sport-activity-type"
-          name="activityType"
-          required
-          maxlength="80"
-          value="${escapeHtml(preset.activityType || presetGoal?.sport || "")}"
-          placeholder="Ex : Course à pied, natation, football..."
-        >
-      </div>
 
       <div class="row">
         <div class="field">
@@ -1313,7 +1333,7 @@ async function showActivityModal(preset = {}) {
         </div>
       </div>
 
-      <div class="sport-activity-metrics">
+      <div class="sport-activity-metrics" id="sport-distance-fields">
         <div class="field">
           <label>Distance</label>
           <input type="number" name="distance" min="0" step="0.01" value="${preset.distance ?? ""}" placeholder="Ex : 10">
@@ -1321,7 +1341,7 @@ async function showActivityModal(preset = {}) {
 
         <div class="field">
           <label>Unité</label>
-          <select name="distanceUnit">
+          <select name="distanceUnit" id="sport-distance-unit">
             <option value="km" ${(preset.distanceUnit || "km") === "km" ? "selected" : ""}>Kilomètres</option>
             <option value="m" ${preset.distanceUnit === "m" ? "selected" : ""}>Mètres</option>
           </select>
@@ -1340,16 +1360,45 @@ async function showActivityModal(preset = {}) {
     </form>
   `);
 
+  const sportSelect = document.querySelector("#sport-activity-sport");
   const goalSelect = document.querySelector("#sport-activity-goal");
-  if (goalSelect) {
-    goalSelect.addEventListener("change", () => {
-      const goal = goals.find(item => item.id === goalSelect.value);
-      if (!goal) return;
-      document.querySelector("#sport-activity-type").value = goal.sport || "";
-      const unitSelect = document.querySelector('[name="distanceUnit"]');
-      if (unitSelect && goal.targetDistanceUnit) unitSelect.value = goal.targetDistanceUnit;
-    });
+  const distanceFields = document.querySelector("#sport-distance-fields");
+  const unitSelect = document.querySelector("#sport-distance-unit");
+
+  function refreshSportFields({ setDefaultUnit = false } = {}) {
+    const sportId = canonicalSportId(sportSelect?.value || "");
+    if (distanceFields) {
+      distanceFields.style.display = sportSupportsDistance(sportId) ? "grid" : "none";
+    }
+    if (unitSelect && setDefaultUnit) unitSelect.value = sportDefaultUnit(sportId);
+
+    if (goalSelect) {
+      [...goalSelect.options].forEach(option => {
+        if (!option.value) {
+          option.hidden = false;
+          return;
+        }
+        option.hidden = option.dataset.sportId !== sportId;
+      });
+
+      if (goalSelect.value) {
+        const selected = goalSelect.options[goalSelect.selectedIndex];
+        if (selected?.dataset.sportId !== sportId) goalSelect.value = "";
+      }
+    }
   }
+
+  refreshSportFields();
+
+  sportSelect?.addEventListener("change", () => refreshSportFields({ setDefaultUnit: true }));
+
+  goalSelect?.addEventListener("change", () => {
+    const goal = goals.find(item => item.id === goalSelect.value);
+    if (!goal) return;
+    sportSelect.value = goalSportId(goal);
+    if (unitSelect && goal.targetDistanceUnit) unitSelect.value = goal.targetDistanceUnit;
+    refreshSportFields();
+  });
 
   document.querySelector("#sport-activity-close").addEventListener("click", closeModal);
   document.querySelector("#sport-activity-cancel").addEventListener("click", closeModal);
@@ -1358,9 +1407,10 @@ async function showActivityModal(preset = {}) {
     event.preventDefault();
 
     const fd = new FormData(event.target);
-    const activityType = String(fd.get("activityType") || "").trim();
+    const sportId = canonicalSportId(fd.get("sportId") || "other");
+    const activityType = sportLabel(sportId);
     const distance = Number(fd.get("distance") || 0);
-    const distanceUnit = String(fd.get("distanceUnit") || "km");
+    const distanceUnit = String(fd.get("distanceUnit") || sportDefaultUnit(sportId));
     const goalId = String(fd.get("goalId") || "") || null;
 
     const distanceKm = distance > 0
@@ -1376,12 +1426,13 @@ async function showActivityModal(preset = {}) {
       type: "activity",
       status: "completed",
       date: String(fd.get("date") || todayISO()),
+      sportId,
       activityType,
       duration: Number(fd.get("duration") || 0),
-      distance,
+      distance: sportSupportsDistance(sportId) ? distance : 0,
       distanceUnit,
-      distanceKm,
-      distanceMeters,
+      distanceKm: sportSupportsDistance(sportId) ? distanceKm : 0,
+      distanceMeters: sportSupportsDistance(sportId) ? distanceMeters : 0,
       sportGoalId: goalId,
       notes: String(fd.get("notes") || "").trim(),
       createdAt: new Date().toISOString(),
@@ -1393,7 +1444,6 @@ async function showActivityModal(preset = {}) {
     await completeSportPlanFromActivity(session, goalId);
 
     closeModal();
-
     window.dispatchEvent(new CustomEvent("myhub:data-changed"));
 
     currentSessionId = session.id;
@@ -1401,7 +1451,6 @@ async function showActivityModal(preset = {}) {
     await renderCurrentView();
   });
 }
-
 
 function generatedProgramsHtml(data) {
   if (!data.trainingPlans.length) return "";
@@ -2050,6 +2099,30 @@ async function renderRecords(shell) {
             `).join("") : `<div class="sport-empty compact"><p>Aucun record musculation disponible.</p></div>`}
           </div>
         </article>
+
+        ${records.otherSports?.length ? `
+          <article class="sport-record-group">
+            <div class="sport-record-group-head"><span>🏅</span><div><strong>Autres sports</strong><small>Repères calculés à partir de toutes tes activités libres reconnues.</small></div></div>
+            <div class="sport-record-list">
+              ${records.otherSports.map(record => `
+                <details class="sport-record-exercise">
+                  <summary class="sport-record-row strength">
+                    <div>
+                      <strong>${escapeHtml(record.icon)} ${escapeHtml(record.sport)}</strong>
+                      <small>${record.sessions} séance${record.sessions > 1 ? "s" : ""} enregistrée${record.sessions > 1 ? "s" : ""}</small>
+                    </div>
+                    <b>${record.longestMinutes ? `${Math.round(record.longestMinutes)} min` : "—"}</b>
+                  </summary>
+                  <div class="sport-record-exercise-detail">
+                    <div><span>Durée max</span><strong>${record.longestMinutes ? `${Math.round(record.longestMinutes)} min` : "—"}</strong><small>${record.longestDate ? formatDate(record.longestDate) : ""}</small></div>
+                    ${record.farthestKm > 0 ? `<div><span>Distance max</span><strong>${roundWeight(record.farthestKm)} km</strong><small>${formatDate(record.farthestDate)}</small></div>` : ""}
+                    <div><span>Volume total</span><strong>${Math.round(record.totalMinutes)} min</strong><small>${record.sessions} activité${record.sessions > 1 ? "s" : ""}</small></div>
+                  </div>
+                </details>
+              `).join("")}
+            </div>
+          </article>
+        ` : ""}
       </div>
     </section>
   `;
@@ -2526,7 +2599,7 @@ async function showSportGoalModal(goalId = null) {
       <div class="field"><label>Nom de l'objectif</label><input name="name" maxlength="100" value="${escapeHtml(goal?.name || "")}" placeholder="Ex : 10 km en 45 min / Full Body 6 mois"></div>
 
       <div id="sport-performance-fields">
-        <div class="field"><label>Sport</label><input name="sport" maxlength="80" value="${escapeHtml(goal?.sport || "")}" placeholder="Course à pied ou Natation"></div>
+        <div class="field"><label>Sport</label><select name="sportId">${sportSelectOptions(goal?.sportId || goal?.sport || "running", { includeOther: false })}</select><small class="muted">Même identité utilisée dans les activités, records et programmes.</small></div>
         <div class="sport-goal-form-block"><strong>Niveau actuel</strong>
           <div class="sport-activity-metrics" style="margin-top:10px"><div class="field"><label>Distance</label><input type="number" name="baselineDistance" min="0" step="0.01" value="${goal?.baselineDistance ?? ""}"></div><div class="field"><label>Unité</label><select name="baselineDistanceUnit"><option value="km" ${(goal?.baselineDistanceUnit || "km") === "km" ? "selected" : ""}>km</option><option value="m" ${goal?.baselineDistanceUnit === "m" ? "selected" : ""}>m</option></select></div></div>
           <div class="field"><label>Temps actuel (min)</label><input type="number" name="baselineTimeMinutes" min="0.1" step="0.01" value="${goal?.baselineTimeMinutes ?? ""}"></div>
@@ -2551,7 +2624,7 @@ async function showSportGoalModal(goalId = null) {
       </div>
 
       <div id="sport-simple-fields">
-        <div class="field"><label>Sport</label><input name="simpleSport" maxlength="80" value="${escapeHtml(goalType === "simple" ? (goal?.sport || "") : "")}"></div>
+        <div class="field"><label>Sport</label><select name="simpleSportId">${sportSelectOptions(goalType === "simple" ? (goal?.sportId || goal?.sport || "running") : "running")}</select></div>
         <div class="field"><label>Mesure</label><select name="metric">${Object.entries(SPORT_METRICS).map(([key, meta]) => `<option value="${key}" ${goal?.metric === key ? "selected" : ""}>${meta.label} (${meta.unit})</option>`).join("")}</select></div>
         <div class="row"><div class="field"><label>Départ</label><input type="number" name="baseline" step="0.01" value="${goal?.baseline ?? ""}"></div><div class="field"><label>Cible</label><input type="number" name="target" step="0.01" value="${goal?.target ?? ""}"></div></div>
       </div>
@@ -2654,7 +2727,8 @@ async function showSportGoalModal(goalId = null) {
     };
 
     if (type === "performance") {
-      saved.sport = String(fd.get("sport") || "").trim();
+      saved.sportId = canonicalSportId(fd.get("sportId") || "running");
+      saved.sport = sportLabel(saved.sportId);
       saved.baselineDistance = Number(fd.get("baselineDistance") || 0);
       saved.baselineDistanceUnit = String(fd.get("baselineDistanceUnit") || "km");
       saved.baselineTimeMinutes = Number(fd.get("baselineTimeMinutes") || 0);
@@ -2663,7 +2737,8 @@ async function showSportGoalModal(goalId = null) {
       saved.targetTimeMinutes = Number(fd.get("targetTimeMinutes") || 0);
       if (!saved.sport || saved.baselineDistance <= 0 || saved.baselineTimeMinutes <= 0 || saved.targetDistance <= 0 || saved.targetTimeMinutes <= 0) return alert("Renseigne le sport, les distances et les temps de départ et cible.");
     } else if (type === "strength_multi") {
-      saved.sport = "Musculation";
+      saved.sportId = "strength";
+      saved.sport = sportLabel("strength");
       const rowElements = [...rowsRoot.querySelectorAll("[data-strength-row]")];
       const definitionsToSave = rowElements.map((row, index) => ({
         id: definitions[index]?.id || uid("sport_strength_goal_exercise"),
@@ -2682,7 +2757,8 @@ async function showSportGoalModal(goalId = null) {
       for (const old of definitions) if (!definitionsToSave.some(row => row.id === old.id)) await deleteOne("sportStrengthGoalExercises", old.id);
       for (const row of definitionsToSave) await putOne("sportStrengthGoalExercises", row);
     } else if (type === "strength") {
-      saved.sport = "Musculation";
+      saved.sportId = "strength";
+      saved.sport = sportLabel("strength");
       saved.exerciseName = String(fd.get("exerciseName") || "").trim();
       saved.baselineWeight = Number(fd.get("baselineWeight") || 0);
       saved.baselineReps = Math.max(1, Number(fd.get("baselineReps") || 1));
@@ -2690,7 +2766,8 @@ async function showSportGoalModal(goalId = null) {
       saved.targetReps = Math.max(1, Number(fd.get("targetReps") || 1));
       if (!saved.exerciseName || saved.baselineWeight <= 0 || saved.targetWeight <= 0) return alert("Renseigne l'exercice et les charges de départ et cible.");
     } else {
-      saved.sport = String(fd.get("simpleSport") || "").trim();
+      saved.sportId = canonicalSportId(fd.get("simpleSportId") || "other");
+      saved.sport = sportLabel(saved.sportId);
       saved.metric = String(fd.get("metric") || "distance_km");
       saved.baseline = Number(fd.get("baseline"));
       saved.target = Number(fd.get("target"));

@@ -1,4 +1,4 @@
-const CACHE = "myhub-v29-repas-courses-ui";
+const CACHE = "myhub-v30-sport-unified";
 
 const ASSETS = [
   "./",
@@ -32,6 +32,7 @@ const ASSETS = [
   "./js/core/learning_sync.js",
   "./js/core/sport_planner.js",
   "./js/core/sport_insights.js",
+  "./js/core/sport_catalog.js",
   "./js/core/tracker_automation.js",
   "./js/core/living_tasks.js",
   "./js/core/backup.js",
