@@ -1,4 +1,4 @@
-const CACHE = "myhub-v30-1-repas-search-random";
+const CACHE = "myhub-v30-2-repas-search-fix";
 
 const ASSETS = [
   "./",

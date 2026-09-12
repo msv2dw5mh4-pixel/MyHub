@@ -175,3 +175,5 @@
     grid-template-columns: 1fr;
   }
 }
+
+.meal-card-v29[hidden], .meal-empty-v29[hidden]{display:none!important;}

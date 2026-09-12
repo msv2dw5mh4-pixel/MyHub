@@ -422,28 +422,128 @@ function showRandomMealModal(meals, rerender) {
 async function renderLibrary(container) {
   const meals = (await getAll("meals")).filter(m => m.active !== false);
   const filters = ["Tous","Italien","Asiatique","Classique","Poulet","Steak haché","Crevettes","Pâtes","Rapide","Favoris"];
-  const q=normalize(libraryQuery);
-  const filtered=meals.filter(meal=>{const allText=normalize([meal.name,meal.cuisine,...(meal.tags||[]),...(meal.ingredients||[]).map(i=>i.name),meal.notes].join(" "));if(q&&!allText.includes(q))return false;if(libraryFilter==="Tous")return true;if(libraryFilter==="Favoris")return Boolean(meal.favorite);return meal.cuisine===libraryFilter||(meal.tags||[]).includes(libraryFilter);}).sort((a,b)=>Number(b.favorite)-Number(a.favorite)||a.name.localeCompare(b.name,"fr"));
-  container.innerHTML=`<section class="meal-library-head">
+
+  const filterMatches = meal => {
+    if (libraryFilter === "Tous") return true;
+    if (libraryFilter === "Favoris") return Boolean(meal.favorite);
+    return meal.cuisine === libraryFilter || (meal.tags || []).includes(libraryFilter);
+  };
+
+  const filteredByCategory = meals
+    .filter(filterMatches)
+    .sort((a,b) => Number(b.favorite)-Number(a.favorite) || a.name.localeCompare(b.name,"fr"));
+
+  const queryNow = normalize(libraryQuery);
+
+  container.innerHTML=`
+  <section class="meal-library-head">
     <div class="meal-library-searchbox">
       <span>⌕</span>
-      <input id="meal-library-search" type="search" value="${escapeHtml(libraryQuery)}" placeholder="Plat, ingrédient, envie…">
+      <input id="meal-library-search" type="search" value="${escapeHtml(libraryQuery)}" placeholder="Plat, ingrédient, envie…" autocomplete="off" autocapitalize="none">
     </div>
     <div class="meal-library-actions">
       <button class="ghost-btn meal-random-btn" id="meal-random" type="button">🎲 Aléatoire</button>
       <button class="primary-btn meal-add-btn" id="meal-add" type="button">+ Nouveau</button>
     </div>
   </section>
-  <div class="meal-filter-row meal-filter-row-v29">${filters.map(f=>`<button class="meal-filter ${libraryFilter===f?"active":""}" data-meal-filter="${f}">${f}</button>`).join("")}</div>
-  <div class="meal-library-count"><strong>${filtered.length}</strong> repas ${libraryFilter!=="Tous"||libraryQuery?`<span>sur ${meals.length}</span>`:`<span>dans ta bibliothèque</span>`}</div>
-  <section class="meal-grid meal-grid-v29">${filtered.map(meal=>{const n=(meal.ingredients||[]).length,tags=(meal.tags||[]).slice(0,2),initial=String(meal.name||"?").trim().charAt(0).toUpperCase();return `<article class="meal-card-v29" data-meal-id="${meal.id}"><div class="meal-card-accent">${escapeHtml(initial)}</div><div class="meal-card-body"><div class="meal-card-topline"><span class="meal-cuisine-v29">${escapeHtml(meal.cuisine||"Classique")}</span><button class="meal-star ${meal.favorite?"active":""}" data-meal-star="${meal.id}" aria-label="Favori">★</button></div><h3>${escapeHtml(meal.name)}</h3><div class="meal-card-meta"><span>◷ ${meal.prepMinutes||0} min</span><span>• ${n} ingr.</span><span>• ${meal.servings||2} pers.</span></div>${tags.length?`<div class="meal-tags">${tags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}</div>`:""}<button class="meal-card-edit-link" data-meal-edit="${meal.id}">Modifier</button></div></article>`;}).join("")||`<div class="meal-empty-v29"><strong>Aucun repas trouvé</strong><span>Essaie un autre filtre ou une autre recherche.</span></div>`}</section>`;
+
+  <div class="meal-filter-row meal-filter-row-v29">
+    ${filters.map(f=>`<button class="meal-filter ${libraryFilter===f?"active":""}" data-meal-filter="${f}">${f}</button>`).join("")}
+  </div>
+
+  <div class="meal-library-count">
+    <strong id="meal-library-visible-count">0</strong> repas
+    <span id="meal-library-count-context">${libraryFilter !== "Tous" ? `sur ${filteredByCategory.length}` : "dans ta bibliothèque"}</span>
+  </div>
+
+  <section class="meal-grid meal-grid-v29" id="meal-library-grid">
+    ${filteredByCategory.map(meal=>{
+      const ingredientCount=(meal.ingredients||[]).length;
+      const tags=(meal.tags||[]).slice(0,2);
+      const initial=String(meal.name||"?").trim().charAt(0).toUpperCase();
+      const searchText=normalize([meal.name,meal.cuisine,...(meal.tags||[]),...(meal.ingredients||[]).map(i=>i.name),meal.notes].join(" "));
+      const hidden=queryNow && !searchText.includes(queryNow);
+      return `<article class="meal-card-v29" data-meal-id="${meal.id}" data-meal-search="${escapeHtml(searchText)}" ${hidden ? "hidden" : ""}>
+        <div class="meal-card-accent">${escapeHtml(initial)}</div>
+        <div class="meal-card-body">
+          <div class="meal-card-topline">
+            <span class="meal-cuisine-v29">${escapeHtml(meal.cuisine||"Classique")}</span>
+            <button class="meal-star ${meal.favorite?"active":""}" data-meal-star="${meal.id}" aria-label="Favori">★</button>
+          </div>
+          <h3>${escapeHtml(meal.name)}</h3>
+          <div class="meal-card-meta"><span>◷ ${meal.prepMinutes||0} min</span><span>• ${ingredientCount} ingr.</span><span>• ${meal.servings||2} pers.</span></div>
+          ${tags.length?`<div class="meal-tags">${tags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}</div>`:""}
+          <button class="meal-card-edit-link" data-meal-edit="${meal.id}">Modifier</button>
+        </div>
+      </article>`;
+    }).join("")}
+    <div class="meal-empty-v29" id="meal-library-empty" hidden>
+      <strong>Aucun repas trouvé</strong>
+      <span>Essaie un autre filtre ou une autre recherche.</span>
+    </div>
+  </section>`;
+
   const rerender=()=>renderLibrary(container);
+
+  const applySearch = () => {
+    const q = normalize(libraryQuery);
+    const cards = [...container.querySelectorAll(".meal-card-v29[data-meal-search]")];
+    let visible = 0;
+
+    cards.forEach(card => {
+      const match = !q || String(card.dataset.mealSearch || "").includes(q);
+      card.hidden = !match;
+      if (match) visible++;
+    });
+
+    const count = container.querySelector("#meal-library-visible-count");
+    if (count) count.textContent = String(visible);
+
+    const context = container.querySelector("#meal-library-count-context");
+    if (context) {
+      if (q || libraryFilter !== "Tous") context.textContent = `sur ${filteredByCategory.length}`;
+      else context.textContent = "dans ta bibliothèque";
+    }
+
+    const empty = container.querySelector("#meal-library-empty");
+    if (empty) empty.hidden = visible !== 0;
+  };
+
   container.querySelector("#meal-random")?.addEventListener("click",()=>showRandomMealModal(meals,rerender));
   container.querySelector("#meal-add").addEventListener("click",()=>showMealModal(null,rerender));
-  container.querySelector("#meal-library-search").addEventListener("input",event=>{libraryQuery=event.target.value;clearTimeout(event.target._timer);event.target._timer=setTimeout(rerender,150);});
-  container.querySelectorAll("[data-meal-filter]").forEach(btn=>btn.addEventListener("click",async()=>{libraryFilter=btn.dataset.mealFilter;await rerender();}));
-  container.querySelectorAll("[data-meal-edit]").forEach(btn=>btn.addEventListener("click",event=>{event.stopPropagation();showMealModal(btn.dataset.mealEdit,rerender);}));
-  container.querySelectorAll("[data-meal-star]").forEach(btn=>btn.addEventListener("click",async event=>{event.stopPropagation();const meal=await getOne("meals",btn.dataset.mealStar);if(!meal)return;await putOne("meals",{...meal,favorite:!meal.favorite,updatedAt:new Date().toISOString()});await rerender();}));
+
+  const searchInput = container.querySelector("#meal-library-search");
+  searchInput?.addEventListener("input", event => {
+    libraryQuery = event.target.value;
+    applySearch();
+  });
+
+  container.querySelectorAll("[data-meal-filter]").forEach(btn=>btn.addEventListener("click",async()=>{
+    libraryFilter=btn.dataset.mealFilter;
+    await rerender();
+    requestAnimationFrame(() => {
+      const input = container.querySelector("#meal-library-search");
+      if (input && libraryQuery) {
+        input.focus({ preventScroll: true });
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    });
+  }));
+
+  container.querySelectorAll("[data-meal-edit]").forEach(btn=>btn.addEventListener("click",event=>{
+    event.stopPropagation();
+    showMealModal(btn.dataset.mealEdit,rerender);
+  }));
+
+  container.querySelectorAll("[data-meal-star]").forEach(btn=>btn.addEventListener("click",async event=>{
+    event.stopPropagation();
+    const meal=await getOne("meals",btn.dataset.mealStar);
+    if(!meal)return;
+    await putOne("meals",{...meal,favorite:!meal.favorite,updatedAt:new Date().toISOString()});
+    await rerender();
+  }));
+
+  applySearch();
 }
 
 export async function getMealsSummary() {
