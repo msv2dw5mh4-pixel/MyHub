@@ -1,3 +1,5 @@
+# MyHub V29 — Refonte visuelle Repas & Courses
+
 # MyHub V28 — Repas & Courses
 
 MyHub est une PWA locale : l'application est servie comme site statique, tandis que les données personnelles restent dans IndexedDB sur l'appareil.

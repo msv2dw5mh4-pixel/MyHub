@@ -68,70 +68,21 @@ export async function getShoppingSummary() {
 }
 
 export async function renderShopping(container) {
-  const rows = await getAll("shoppingItems");
-  const summary = {
-    total: rows.length,
-    todo: rows.filter(r => !r.checked).length,
-    done: rows.filter(r => r.checked).length
-  };
-  const visible = rows.filter(row => filter === "all" || (filter === "todo" ? !row.checked : row.checked));
-  const grouped = CATEGORIES.map(category => [category, visible.filter(r => (r.category || "Autre") === category)]).filter(([,items]) => items.length);
-  const progress = summary.total ? Math.round(summary.done / summary.total * 100) : 0;
-
-  container.innerHTML = `
-    <section class="shopping-shell">
-      <section class="shopping-hero app-panel">
-        <div><p class="eyebrow">COURSES</p><h2>${summary.todo ? `${summary.todo} article${summary.todo > 1 ? "s" : ""} à prendre` : "Liste terminée"}</h2><p>${summary.done} coché${summary.done > 1 ? "s" : ""} sur ${summary.total}</p></div>
-        <div class="shopping-progress"><strong>${progress}%</strong><div><span style="width:${progress}%"></span></div></div>
-      </section>
-      <section class="shopping-toolbar app-panel">
-        <div class="shopping-filters">
-          <button class="${filter === "todo" ? "active" : ""}" data-shopping-filter="todo">À acheter</button>
-          <button class="${filter === "done" ? "active" : ""}" data-shopping-filter="done">Pris</button>
-          <button class="${filter === "all" ? "active" : ""}" data-shopping-filter="all">Tout</button>
-        </div>
-        <button class="primary-btn" id="shopping-add">+ Article</button>
-      </section>
-      <div class="shopping-list">
-        ${grouped.map(([category, items]) => `
-          <section class="shopping-category app-panel">
-            <div class="section-head compact"><h3>${escapeHtml(category)}</h3><span class="app-badge">${items.length}</span></div>
-            ${items.sort((a,b) => Number(a.checked)-Number(b.checked) || a.name.localeCompare(b.name,"fr")).map(item => `
-              <article class="shopping-row ${item.checked ? "checked" : ""}">
-                <button class="shopping-check" data-shopping-check="${item.id}" aria-label="Cocher">${item.checked ? "✓" : ""}</button>
-                <button class="shopping-main" data-shopping-edit="${item.id}">
-                  <strong>${escapeHtml(item.name)}</strong>
-                  <small>${escapeHtml(formatQty(item))}${item.note ? ` · ${escapeHtml(item.note)}` : ""}${item.source === "meal-plan" ? " · Repas" : ""}</small>
-                </button>
-              </article>`).join("")}
-          </section>`).join("") || `<section class="app-panel empty-state">${summary.total ? "Aucun article dans ce filtre." : "Ta liste de courses est vide."}</section>`}
-      </div>
-      ${summary.done ? `<section class="shopping-bottom-actions"><button class="ghost-btn" id="shopping-clear-done">Supprimer les articles pris</button>${summary.total ? `<button class="danger-btn" id="shopping-clear-all">Vider la liste</button>` : ""}</section>` : (summary.total ? `<section class="shopping-bottom-actions"><button class="danger-btn" id="shopping-clear-all">Vider la liste</button></section>` : "")}
-    </section>
-  `;
-
-  const rerender = () => renderShopping(container);
-  container.querySelector("#shopping-add").addEventListener("click", () => showShoppingItemModal(null, rerender));
-  container.querySelectorAll("[data-shopping-filter]").forEach(btn => btn.addEventListener("click", async () => { filter = btn.dataset.shoppingFilter; await rerender(); }));
-  container.querySelectorAll("[data-shopping-check]").forEach(btn => btn.addEventListener("click", async () => {
-    const item = await getOne("shoppingItems", btn.dataset.shoppingCheck);
-    if (!item) return;
-    await putOne("shoppingItems", { ...item, checked: !item.checked, updatedAt: new Date().toISOString() });
-    window.dispatchEvent(new CustomEvent("myhub:data-changed"));
-    await rerender();
-  }));
-  container.querySelectorAll("[data-shopping-edit]").forEach(btn => btn.addEventListener("click", () => showShoppingItemModal(btn.dataset.shoppingEdit, rerender)));
-  container.querySelector("#shopping-clear-done")?.addEventListener("click", async () => {
-    for (const item of rows.filter(r => r.checked)) await deleteOne("shoppingItems", item.id);
-    window.dispatchEvent(new CustomEvent("myhub:data-changed"));
-    await rerender();
-  });
-  container.querySelector("#shopping-clear-all")?.addEventListener("click", async () => {
-    if (!confirm("Vider toute la liste de courses ?")) return;
-    for (const item of rows) await deleteOne("shoppingItems", item.id);
-    window.dispatchEvent(new CustomEvent("myhub:data-changed"));
-    await rerender();
-  });
+  const rows=await getAll("shoppingItems");
+  const summary={total:rows.length,todo:rows.filter(r=>!r.checked).length,done:rows.filter(r=>r.checked).length};
+  const visible=rows.filter(row=>filter==="all"||(filter==="todo"?!row.checked:row.checked));
+  const grouped=CATEGORIES.map(category=>[category,visible.filter(r=>(r.category||"Autre")===category)]).filter(([,items])=>items.length);
+  const progress=summary.total?Math.round(summary.done/summary.total*100):0;
+  const generatedCount=rows.filter(r=>r.source==="meal-plan").length;
+  container.innerHTML=`<section class="shopping-shell shopping-shell-v29"><header class="shopping-top-v29"><div><p class="eyebrow">COURSES</p><h2>${summary.todo?`${summary.todo} à acheter`:summary.total?"Tout est pris":"Liste vide"}</h2><p>${generatedCount?`${generatedCount} article${generatedCount>1?"s":""} viennent des repas`:"Ajoute tes articles ou génère-les depuis Repas"}</p></div><button class="primary-btn shopping-add-top" id="shopping-add">+ Article</button></header>${summary.total?`<section class="shopping-progress-card"><div class="shopping-progress-copy"><strong>${summary.done}/${summary.total}</strong><span>articles pris</span></div><div class="shopping-progress-v29"><span style="width:${progress}%"></span></div><strong class="shopping-progress-percent">${progress}%</strong></section>`:""}<nav class="shopping-filters shopping-filters-v29"><button class="${filter==="todo"?"active":""}" data-shopping-filter="todo">À acheter <span>${summary.todo}</span></button><button class="${filter==="done"?"active":""}" data-shopping-filter="done">Pris <span>${summary.done}</span></button><button class="${filter==="all"?"active":""}" data-shopping-filter="all">Tout <span>${summary.total}</span></button></nav><div class="shopping-list shopping-list-v29">${grouped.map(([category,items])=>`<section class="shopping-category-v29"><div class="shopping-category-head"><h3>${escapeHtml(category)}</h3><span>${items.length}</span></div><div class="shopping-category-items">${items.sort((a,b)=>Number(a.checked)-Number(b.checked)||a.name.localeCompare(b.name,"fr")).map(item=>`<article class="shopping-row-v29 ${item.checked?"checked":""}"><button class="shopping-check-v29" data-shopping-check="${item.id}" aria-label="${item.checked?"Décocher":"Cocher"}">${item.checked?"✓":""}</button><button class="shopping-main-v29" data-shopping-edit="${item.id}"><span class="shopping-item-line"><strong>${escapeHtml(item.name)}</strong>${item.source==="meal-plan"?`<em>Repas</em>`:""}</span><small>${escapeHtml(formatQty(item)||"1")}${item.note?`<span> · ${escapeHtml(item.note)}</span>`:""}</small></button><button class="shopping-edit-icon" data-shopping-edit="${item.id}" aria-label="Modifier">›</button></article>`).join("")}</div></section>`).join("")||`<section class="shopping-empty-v29"><div>${filter==="done"?"✓":"🛒"}</div><strong>${summary.total?"Rien dans cette vue":"Ta liste est prête"}</strong><span>${summary.total?"Change de filtre pour voir les autres articles.":"Ajoute un article ou génère ta liste depuis le module Repas."}</span>${!summary.total?`<button class="primary-btn" id="shopping-empty-add">Ajouter un article</button>`:""}</section>`}</div>${summary.total?`<section class="shopping-actions-v29">${summary.done?`<button class="ghost-btn" id="shopping-clear-done">Nettoyer les articles pris</button>`:""}<button class="shopping-danger-link" id="shopping-clear-all">Vider la liste</button></section>`:""}</section>`;
+  const rerender=()=>renderShopping(container);
+  container.querySelector("#shopping-add")?.addEventListener("click",()=>showShoppingItemModal(null,rerender));
+  container.querySelector("#shopping-empty-add")?.addEventListener("click",()=>showShoppingItemModal(null,rerender));
+  container.querySelectorAll("[data-shopping-filter]").forEach(btn=>btn.addEventListener("click",async()=>{filter=btn.dataset.shoppingFilter;await rerender();}));
+  container.querySelectorAll("[data-shopping-check]").forEach(btn=>btn.addEventListener("click",async()=>{const item=await getOne("shoppingItems",btn.dataset.shoppingCheck);if(!item)return;await putOne("shoppingItems",{...item,checked:!item.checked,updatedAt:new Date().toISOString()});window.dispatchEvent(new CustomEvent("myhub:data-changed"));await rerender();}));
+  container.querySelectorAll("[data-shopping-edit]").forEach(btn=>btn.addEventListener("click",()=>showShoppingItemModal(btn.dataset.shoppingEdit,rerender)));
+  container.querySelector("#shopping-clear-done")?.addEventListener("click",async()=>{for(const item of rows.filter(r=>r.checked))await deleteOne("shoppingItems",item.id);window.dispatchEvent(new CustomEvent("myhub:data-changed"));await rerender();});
+  container.querySelector("#shopping-clear-all")?.addEventListener("click",async()=>{if(!confirm("Vider toute la liste de courses ?"))return;for(const item of rows)await deleteOne("shoppingItems",item.id);window.dispatchEvent(new CustomEvent("myhub:data-changed"));await rerender();});
 }
 
 export function requestNewShoppingItem() {

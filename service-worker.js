@@ -1,4 +1,4 @@
-const CACHE = "myhub-v28-2-tasks-restore-fix";
+const CACHE = "myhub-v29-repas-courses-ui";
 
 const ASSETS = [
   "./",

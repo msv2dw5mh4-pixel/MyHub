@@ -309,105 +309,67 @@ async function renderWeek(container, rerenderRoot) {
   const [mealsRows, plans] = await Promise.all([getAll("meals"), getAll("mealPlans")]);
   const meals = mealsRows.filter(m => m.active !== false).sort((a,b) => a.name.localeCompare(b.name, "fr"));
   const planMap = new Map(plans.map(p => [p.id, p]));
+  const today = todayISO();
+  const plannedCount = days.reduce((count, date) => {
+    const iso = localISO(date);
+    return count + MEAL_TYPES.filter(type => planMap.get(`mealplan_${iso}_${type.id}`)?.mealId).length;
+  }, 0);
+  const todayDate = days.find(date => localISO(date) === today);
+  const todayMeals = todayDate ? MEAL_TYPES.map(type => {
+    const plan = planMap.get(`mealplan_${today}_${type.id}`);
+    return { type, meal: plan ? meals.find(m => m.id === plan.mealId) : null };
+  }) : [];
 
   container.innerHTML = `
-    <section class="meal-week-toolbar app-panel">
-      <button class="icon-btn" id="meal-prev-week">‹</button>
-      <div><small>Semaine</small><strong>${formatWeekRange(start)}</strong></div>
-      <button class="icon-btn" id="meal-next-week">›</button>
-      <button class="ghost-btn" id="meal-current-week">Aujourd'hui</button>
+    <section class="meal-week-nav">
+      <button class="meal-nav-btn" id="meal-prev-week" aria-label="Semaine précédente">‹</button>
+      <div class="meal-week-title"><span>${weekOffset === 0 ? "Cette semaine" : "Semaine"}</span><strong>${formatWeekRange(start)}</strong></div>
+      <button class="meal-nav-btn" id="meal-next-week" aria-label="Semaine suivante">›</button>
+      ${weekOffset !== 0 ? `<button class="meal-today-link" id="meal-current-week">Revenir à aujourd'hui</button>` : ""}
     </section>
-    <section class="meal-week-list">
+    ${todayDate ? `<section class="meal-today-card">
+      <div class="meal-today-head"><div><span class="meal-today-kicker">Aujourd'hui</span><strong>${formatDay(todayDate)}</strong></div><span class="meal-plan-counter">${plannedCount}/14 planifiés</span></div>
+      <div class="meal-today-grid">${todayMeals.map(({type,meal}) => `<div class="meal-today-slot ${meal ? "filled" : ""}"><span>${type.label}</span><strong>${meal ? escapeHtml(meal.name) : "À choisir"}</strong></div>`).join("")}</div>
+    </section>` : ""}
+    <section class="meal-week-list meal-week-list-v29">
       ${days.map(date => {
-        const iso = localISO(date);
-        const isToday = iso === todayISO();
-        return `
-          <article class="meal-day-card app-panel ${isToday ? "today" : ""}">
-            <div class="meal-day-head"><strong>${formatDay(date)}</strong>${isToday ? `<span class="app-badge">Aujourd'hui</span>` : ""}</div>
-            ${MEAL_TYPES.map(type => {
-              const id = `mealplan_${iso}_${type.id}`;
-              const selected = planMap.get(id)?.mealId || "";
-              return `<label class="meal-slot"><span>${type.label}</span><select data-meal-plan data-date="${iso}" data-type="${type.id}"><option value="">— Libre —</option>${meals.map(m => `<option value="${m.id}" ${m.id === selected ? "selected" : ""}>${escapeHtml(m.name)}</option>`).join("")}</select></label>`;
-            }).join("")}
-          </article>`;
+        const iso = localISO(date), isToday = iso === today;
+        const dayName = new Intl.DateTimeFormat("fr-FR", {weekday:"short"}).format(date).replace(".","");
+        const dayNumber = new Intl.DateTimeFormat("fr-FR", {day:"2-digit"}).format(date);
+        const month = new Intl.DateTimeFormat("fr-FR", {month:"short"}).format(date).replace(".","");
+        return `<article class="meal-day-row ${isToday ? "today" : ""}">
+          <div class="meal-day-date"><span>${escapeHtml(dayName)}</span><strong>${escapeHtml(dayNumber)}</strong><small>${escapeHtml(month)}</small></div>
+          <div class="meal-day-slots">${MEAL_TYPES.map(type => {
+            const id=`mealplan_${iso}_${type.id}`, selected=planMap.get(id)?.mealId||"", selectedMeal=selected?meals.find(m=>m.id===selected):null;
+            return `<label class="meal-slot-v29 ${selectedMeal ? "filled" : ""}"><span>${type.label}</span><select data-meal-plan data-date="${iso}" data-type="${type.id}" aria-label="${type.label} ${formatDay(date)}"><option value="">— Libre —</option>${meals.map(m=>`<option value="${m.id}" ${m.id===selected?"selected":""}>${escapeHtml(m.name)}</option>`).join("")}</select><span class="meal-slot-chevron">⌄</span></label>`;
+          }).join("")}</div>
+        </article>`;
       }).join("")}
     </section>
-    <section class="meal-generate app-panel">
-      <div><strong>Liste de courses</strong><p>Regroupe automatiquement les ingrédients de tous les repas de cette semaine.</p></div>
-      <button class="primary-btn" id="meal-generate-shopping">Générer les courses</button>
-    </section>
-  `;
+    <section class="meal-generate meal-generate-v29"><div class="meal-generate-icon">🛒</div><div class="meal-generate-copy"><strong>Transformer la semaine en courses</strong><p>Les ingrédients des repas planifiés sont regroupés automatiquement.</p></div><button class="primary-btn" id="meal-generate-shopping">Générer</button></section>`;
 
-  container.querySelector("#meal-prev-week").addEventListener("click", async () => { weekOffset--; await rerenderRoot(); });
-  container.querySelector("#meal-next-week").addEventListener("click", async () => { weekOffset++; await rerenderRoot(); });
-  container.querySelector("#meal-current-week").addEventListener("click", async () => { weekOffset = 0; await rerenderRoot(); });
-  container.querySelectorAll("[data-meal-plan]").forEach(select => select.addEventListener("change", async () => {
-    await savePlan(select.dataset.date, select.dataset.type, select.value);
-  }));
-  container.querySelector("#meal-generate-shopping").addEventListener("click", async () => {
-    const result = await generateShoppingFromCurrentWeek();
-    if (result.empty) return alert("Planifie au moins un repas cette semaine avant de générer les courses.");
-    alert(`${result.added} article${result.added > 1 ? "s" : ""} ajouté${result.added > 1 ? "s" : ""} aux courses.`);
-    window.dispatchEvent(new CustomEvent("myhub:navigate", { detail: "shopping" }));
-  });
+  container.querySelector("#meal-prev-week").addEventListener("click", async()=>{weekOffset--;await rerenderRoot();});
+  container.querySelector("#meal-next-week").addEventListener("click", async()=>{weekOffset++;await rerenderRoot();});
+  container.querySelector("#meal-current-week")?.addEventListener("click", async()=>{weekOffset=0;await rerenderRoot();});
+  container.querySelectorAll("[data-meal-plan]").forEach(select=>select.addEventListener("change",async()=>{await savePlan(select.dataset.date,select.dataset.type,select.value);await rerenderRoot();}));
+  container.querySelector("#meal-generate-shopping").addEventListener("click",async()=>{const result=await generateShoppingFromCurrentWeek();if(result.empty)return alert("Planifie au moins un repas cette semaine avant de générer les courses.");alert(`${result.added} article${result.added>1?"s":""} ajouté${result.added>1?"s":""} aux courses.`);window.dispatchEvent(new CustomEvent("myhub:navigate",{detail:"shopping"}));});
 }
 
 async function renderLibrary(container) {
   const meals = (await getAll("meals")).filter(m => m.active !== false);
-  const filters = ["Tous", "Italien", "Asiatique", "Classique", "Poulet", "Steak haché", "Crevettes", "Pâtes", "Rapide", "Favoris"];
-  const q = normalize(libraryQuery);
-  const filtered = meals.filter(meal => {
-    const allText = normalize([meal.name, meal.cuisine, ...(meal.tags || []), ...(meal.ingredients || []).map(i => i.name), meal.notes].join(" "));
-    const queryOk = !q || allText.includes(q);
-    if (!queryOk) return false;
-    if (libraryFilter === "Tous") return true;
-    if (libraryFilter === "Favoris") return Boolean(meal.favorite);
-    return meal.cuisine === libraryFilter || (meal.tags || []).includes(libraryFilter);
-  }).sort((a,b) => Number(b.favorite)-Number(a.favorite) || a.name.localeCompare(b.name, "fr"));
-
-  container.innerHTML = `
-    <section class="meal-library-tools app-panel">
-      <div class="meal-search-row">
-        <input id="meal-library-search" type="search" value="${escapeHtml(libraryQuery)}" placeholder="Rechercher un plat ou un ingrédient…">
-        <button class="primary-btn" id="meal-add">+ Repas</button>
-      </div>
-      <div class="meal-filter-row">${filters.map(f => `<button class="meal-filter ${libraryFilter === f ? "active" : ""}" data-meal-filter="${f}">${f}</button>`).join("")}</div>
-      <small>${filtered.length} repas affiché${filtered.length > 1 ? "s" : ""} · ${meals.length} dans la bibliothèque</small>
-    </section>
-    <section class="meal-grid">
-      ${filtered.map(meal => `
-        <article class="meal-card app-card" data-meal-id="${meal.id}">
-          <div class="meal-card-top"><span class="meal-cuisine">${escapeHtml(meal.cuisine)}</span><button class="meal-star ${meal.favorite ? "active" : ""}" data-meal-star="${meal.id}" aria-label="Favori">★</button></div>
-          <h3>${escapeHtml(meal.name)}</h3>
-          <p>${meal.prepMinutes || 0} min · ${meal.servings || 2} portions · ${(meal.ingredients || []).length} ingrédients</p>
-          <div class="meal-tags">${(meal.tags || []).slice(0,3).map(tag => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
-          <button class="ghost-btn meal-edit" data-meal-edit="${meal.id}">Modifier</button>
-        </article>`).join("") || `<div class="app-panel empty-state">Aucun repas ne correspond à ce filtre.</div>`}
-    </section>
-  `;
-
-  const rerender = () => renderLibrary(container);
-  container.querySelector("#meal-add").addEventListener("click", () => showMealModal(null, rerender));
-  container.querySelector("#meal-library-search").addEventListener("input", event => {
-    libraryQuery = event.target.value;
-    clearTimeout(event.target._timer);
-    event.target._timer = setTimeout(rerender, 150);
-  });
-  container.querySelectorAll("[data-meal-filter]").forEach(btn => btn.addEventListener("click", async () => {
-    libraryFilter = btn.dataset.mealFilter;
-    await rerender();
-  }));
-  container.querySelectorAll("[data-meal-edit]").forEach(btn => btn.addEventListener("click", event => {
-    event.stopPropagation();
-    showMealModal(btn.dataset.mealEdit, rerender);
-  }));
-  container.querySelectorAll("[data-meal-star]").forEach(btn => btn.addEventListener("click", async event => {
-    event.stopPropagation();
-    const meal = await getOne("meals", btn.dataset.mealStar);
-    if (!meal) return;
-    await putOne("meals", { ...meal, favorite: !meal.favorite, updatedAt: new Date().toISOString() });
-    await rerender();
-  }));
+  const filters = ["Tous","Italien","Asiatique","Classique","Poulet","Steak haché","Crevettes","Pâtes","Rapide","Favoris"];
+  const q=normalize(libraryQuery);
+  const filtered=meals.filter(meal=>{const allText=normalize([meal.name,meal.cuisine,...(meal.tags||[]),...(meal.ingredients||[]).map(i=>i.name),meal.notes].join(" "));if(q&&!allText.includes(q))return false;if(libraryFilter==="Tous")return true;if(libraryFilter==="Favoris")return Boolean(meal.favorite);return meal.cuisine===libraryFilter||(meal.tags||[]).includes(libraryFilter);}).sort((a,b)=>Number(b.favorite)-Number(a.favorite)||a.name.localeCompare(b.name,"fr"));
+  container.innerHTML=`<section class="meal-library-head"><div class="meal-library-searchbox"><span>⌕</span><input id="meal-library-search" type="search" value="${escapeHtml(libraryQuery)}" placeholder="Plat, ingrédient, envie…"></div><button class="primary-btn meal-add-btn" id="meal-add">+ Nouveau</button></section>
+  <div class="meal-filter-row meal-filter-row-v29">${filters.map(f=>`<button class="meal-filter ${libraryFilter===f?"active":""}" data-meal-filter="${f}">${f}</button>`).join("")}</div>
+  <div class="meal-library-count"><strong>${filtered.length}</strong> repas ${libraryFilter!=="Tous"||libraryQuery?`<span>sur ${meals.length}</span>`:`<span>dans ta bibliothèque</span>`}</div>
+  <section class="meal-grid meal-grid-v29">${filtered.map(meal=>{const n=(meal.ingredients||[]).length,tags=(meal.tags||[]).slice(0,2),initial=String(meal.name||"?").trim().charAt(0).toUpperCase();return `<article class="meal-card-v29" data-meal-id="${meal.id}"><div class="meal-card-accent">${escapeHtml(initial)}</div><div class="meal-card-body"><div class="meal-card-topline"><span class="meal-cuisine-v29">${escapeHtml(meal.cuisine||"Classique")}</span><button class="meal-star ${meal.favorite?"active":""}" data-meal-star="${meal.id}" aria-label="Favori">★</button></div><h3>${escapeHtml(meal.name)}</h3><div class="meal-card-meta"><span>◷ ${meal.prepMinutes||0} min</span><span>• ${n} ingr.</span><span>• ${meal.servings||2} pers.</span></div>${tags.length?`<div class="meal-tags">${tags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}</div>`:""}<button class="meal-card-edit-link" data-meal-edit="${meal.id}">Modifier</button></div></article>`;}).join("")||`<div class="meal-empty-v29"><strong>Aucun repas trouvé</strong><span>Essaie un autre filtre ou une autre recherche.</span></div>`}</section>`;
+  const rerender=()=>renderLibrary(container);
+  container.querySelector("#meal-add").addEventListener("click",()=>showMealModal(null,rerender));
+  container.querySelector("#meal-library-search").addEventListener("input",event=>{libraryQuery=event.target.value;clearTimeout(event.target._timer);event.target._timer=setTimeout(rerender,150);});
+  container.querySelectorAll("[data-meal-filter]").forEach(btn=>btn.addEventListener("click",async()=>{libraryFilter=btn.dataset.mealFilter;await rerender();}));
+  container.querySelectorAll("[data-meal-edit]").forEach(btn=>btn.addEventListener("click",event=>{event.stopPropagation();showMealModal(btn.dataset.mealEdit,rerender);}));
+  container.querySelectorAll("[data-meal-star]").forEach(btn=>btn.addEventListener("click",async event=>{event.stopPropagation();const meal=await getOne("meals",btn.dataset.mealStar);if(!meal)return;await putOne("meals",{...meal,favorite:!meal.favorite,updatedAt:new Date().toISOString()});await rerender();}));
 }
 
 export async function getMealsSummary() {
@@ -429,29 +391,10 @@ export async function getMealsSummary() {
 
 export async function renderMeals(container) {
   await ensureMealsSeeded();
-  const summary = await getMealsSummary();
-  container.innerHTML = `
-    <section class="meals-shell">
-      <section class="meals-hero app-panel">
-        <div><p class="eyebrow">REPAS</p><h2>Qu'est-ce qu'on mange ?</h2><p>${summary.library} repas disponibles · ${summary.plannedWeek} planifiés cette semaine</p></div>
-        <div class="meal-hero-stats"><span><strong>${summary.favorites}</strong> favoris</span><span><strong>${summary.today}</strong> aujourd'hui</span></div>
-      </section>
-      <nav class="meal-tabs">
-        <button class="${currentTab === "week" ? "active" : ""}" data-meal-tab="week">Semaine</button>
-        <button class="${currentTab === "library" ? "active" : ""}" data-meal-tab="library">Bibliothèque</button>
-      </nav>
-      <div id="meal-tab-content"></div>
-    </section>
-  `;
-
-  container.querySelectorAll("[data-meal-tab]").forEach(btn => btn.addEventListener("click", async () => {
-    currentTab = btn.dataset.mealTab;
-    await renderMeals(container);
-  }));
-
-  const target = container.querySelector("#meal-tab-content");
-  if (currentTab === "library") await renderLibrary(target);
-  else await renderWeek(target, () => renderMeals(container));
+  const summary=await getMealsSummary();
+  container.innerHTML=`<section class="meals-shell meals-shell-v29"><header class="meals-top-v29"><div><p class="eyebrow">REPAS</p><h2>${currentTab==="week"?"Ma semaine":"Mes repas"}</h2><p>${currentTab==="week"?`${summary.plannedWeek} repas planifié${summary.plannedWeek>1?"s":""} · ${14-Math.min(summary.plannedWeek,14)} créneaux libres`:`${summary.library} recettes · ${summary.favorites} favori${summary.favorites>1?"s":""}`}</p></div><div class="meal-top-mini-stat"><strong>${summary.today}</strong><span>aujourd'hui</span></div></header><nav class="meal-tabs meal-tabs-v29"><button class="${currentTab==="week"?"active":""}" data-meal-tab="week"><span>▦</span> Semaine</button><button class="${currentTab==="library"?"active":""}" data-meal-tab="library"><span>⌕</span> Bibliothèque</button></nav><div id="meal-tab-content"></div></section>`;
+  container.querySelectorAll("[data-meal-tab]").forEach(btn=>btn.addEventListener("click",async()=>{currentTab=btn.dataset.mealTab;await renderMeals(container);}));
+  const target=container.querySelector("#meal-tab-content");if(currentTab==="library")await renderLibrary(target);else await renderWeek(target,()=>renderMeals(container));
 }
 
 export function requestNewMeal() {
