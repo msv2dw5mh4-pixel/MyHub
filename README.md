@@ -1,3 +1,5 @@
+# MyHub V30.1 — Correctif recherche Repas + Plat aléatoire
+
 # MyHub V30 — Sport unifié
 
 # MyHub V29 — Refonte visuelle Repas & Courses

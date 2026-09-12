@@ -355,16 +355,90 @@ async function renderWeek(container, rerenderRoot) {
   container.querySelector("#meal-generate-shopping").addEventListener("click",async()=>{const result=await generateShoppingFromCurrentWeek();if(result.empty)return alert("Planifie au moins un repas cette semaine avant de générer les courses.");alert(`${result.added} article${result.added>1?"s":""} ajouté${result.added>1?"s":""} aux courses.`);window.dispatchEvent(new CustomEvent("myhub:navigate",{detail:"shopping"}));});
 }
 
+
+function showRandomMealModal(meals, rerender) {
+  if (!meals?.length) return alert("Aucun repas disponible dans la bibliothèque.");
+
+  const pick = () => meals[Math.floor(Math.random() * meals.length)];
+
+  const show = meal => {
+    openModal(`
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">PLAT ALÉATOIRE</p>
+          <h2>🎲 ${escapeHtml(meal.name)}</h2>
+        </div>
+        <button class="icon-btn" id="meal-random-close">×</button>
+      </div>
+
+      <section class="meal-random-result">
+        <div class="meal-random-hero">
+          <div class="meal-random-letter">${escapeHtml(String(meal.name || "?").charAt(0).toUpperCase())}</div>
+          <div>
+            <span>${escapeHtml(meal.cuisine || "Classique")}</span>
+            <strong>${escapeHtml(meal.name)}</strong>
+            <small>◷ ${meal.prepMinutes || 0} min · ${meal.servings || 2} pers. · ${(meal.ingredients || []).length} ingr.</small>
+          </div>
+        </div>
+
+        ${(meal.tags || []).length ? `
+          <div class="meal-tags">
+            ${(meal.tags || []).slice(0, 4).map(tag => `<span>${escapeHtml(tag)}</span>`).join("")}
+          </div>
+        ` : ""}
+
+        ${(meal.ingredients || []).length ? `
+          <div class="meal-random-ingredients">
+            <strong>Ingrédients</strong>
+            <div>
+              ${(meal.ingredients || []).slice(0, 8).map(item => `
+                <span>
+                  ${escapeHtml(item.name || "")}
+                  ${item.qty ? `<small>${escapeHtml(String(item.qty))}${item.unit ? ` ${escapeHtml(item.unit)}` : ""}</small>` : ""}
+                </span>
+              `).join("")}
+            </div>
+          </div>
+        ` : ""}
+      </section>
+
+      <div class="actions meal-random-actions">
+        <button class="ghost-btn" type="button" id="meal-random-again">🎲 Un autre</button>
+        <button class="primary-btn" type="button" id="meal-random-edit">Modifier</button>
+      </div>
+    `);
+
+    document.querySelector("#meal-random-close")?.addEventListener("click", closeModal);
+    document.querySelector("#meal-random-again")?.addEventListener("click", () => show(pick()));
+    document.querySelector("#meal-random-edit")?.addEventListener("click", () => {
+      closeModal();
+      showMealModal(meal.id, rerender);
+    });
+  };
+
+  show(pick());
+}
+
 async function renderLibrary(container) {
   const meals = (await getAll("meals")).filter(m => m.active !== false);
   const filters = ["Tous","Italien","Asiatique","Classique","Poulet","Steak haché","Crevettes","Pâtes","Rapide","Favoris"];
   const q=normalize(libraryQuery);
   const filtered=meals.filter(meal=>{const allText=normalize([meal.name,meal.cuisine,...(meal.tags||[]),...(meal.ingredients||[]).map(i=>i.name),meal.notes].join(" "));if(q&&!allText.includes(q))return false;if(libraryFilter==="Tous")return true;if(libraryFilter==="Favoris")return Boolean(meal.favorite);return meal.cuisine===libraryFilter||(meal.tags||[]).includes(libraryFilter);}).sort((a,b)=>Number(b.favorite)-Number(a.favorite)||a.name.localeCompare(b.name,"fr"));
-  container.innerHTML=`<section class="meal-library-head"><div class="meal-library-searchbox"><span>⌕</span><input id="meal-library-search" type="search" value="${escapeHtml(libraryQuery)}" placeholder="Plat, ingrédient, envie…"></div><button class="primary-btn meal-add-btn" id="meal-add">+ Nouveau</button></section>
+  container.innerHTML=`<section class="meal-library-head">
+    <div class="meal-library-searchbox">
+      <span>⌕</span>
+      <input id="meal-library-search" type="search" value="${escapeHtml(libraryQuery)}" placeholder="Plat, ingrédient, envie…">
+    </div>
+    <div class="meal-library-actions">
+      <button class="ghost-btn meal-random-btn" id="meal-random" type="button">🎲 Aléatoire</button>
+      <button class="primary-btn meal-add-btn" id="meal-add" type="button">+ Nouveau</button>
+    </div>
+  </section>
   <div class="meal-filter-row meal-filter-row-v29">${filters.map(f=>`<button class="meal-filter ${libraryFilter===f?"active":""}" data-meal-filter="${f}">${f}</button>`).join("")}</div>
   <div class="meal-library-count"><strong>${filtered.length}</strong> repas ${libraryFilter!=="Tous"||libraryQuery?`<span>sur ${meals.length}</span>`:`<span>dans ta bibliothèque</span>`}</div>
   <section class="meal-grid meal-grid-v29">${filtered.map(meal=>{const n=(meal.ingredients||[]).length,tags=(meal.tags||[]).slice(0,2),initial=String(meal.name||"?").trim().charAt(0).toUpperCase();return `<article class="meal-card-v29" data-meal-id="${meal.id}"><div class="meal-card-accent">${escapeHtml(initial)}</div><div class="meal-card-body"><div class="meal-card-topline"><span class="meal-cuisine-v29">${escapeHtml(meal.cuisine||"Classique")}</span><button class="meal-star ${meal.favorite?"active":""}" data-meal-star="${meal.id}" aria-label="Favori">★</button></div><h3>${escapeHtml(meal.name)}</h3><div class="meal-card-meta"><span>◷ ${meal.prepMinutes||0} min</span><span>• ${n} ingr.</span><span>• ${meal.servings||2} pers.</span></div>${tags.length?`<div class="meal-tags">${tags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}</div>`:""}<button class="meal-card-edit-link" data-meal-edit="${meal.id}">Modifier</button></div></article>`;}).join("")||`<div class="meal-empty-v29"><strong>Aucun repas trouvé</strong><span>Essaie un autre filtre ou une autre recherche.</span></div>`}</section>`;
   const rerender=()=>renderLibrary(container);
+  container.querySelector("#meal-random")?.addEventListener("click",()=>showRandomMealModal(meals,rerender));
   container.querySelector("#meal-add").addEventListener("click",()=>showMealModal(null,rerender));
   container.querySelector("#meal-library-search").addEventListener("input",event=>{libraryQuery=event.target.value;clearTimeout(event.target._timer);event.target._timer=setTimeout(rerender,150);});
   container.querySelectorAll("[data-meal-filter]").forEach(btn=>btn.addEventListener("click",async()=>{libraryFilter=btn.dataset.mealFilter;await rerender();}));
