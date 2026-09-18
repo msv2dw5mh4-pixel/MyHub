@@ -2060,12 +2060,24 @@ async function renderRecords(shell) {
         <article class="sport-record-group">
           <div class="sport-record-group-head"><span>🏃</span><div><strong>Course à pied</strong><small>Performances enregistrées proches des distances de référence.</small></div></div>
           <div class="sport-record-list">
+            ${records.runningSummary?.fastestPace ? `
+              <div class="sport-record-row">
+                <div><strong>Meilleure allure</strong><small>${formatDate(records.runningSummary.fastestPace.date)}</small></div>
+                <b>${escapeHtml(records.runningSummary.fastestPace.valueLabel)}</b>
+              </div>
+            ` : ""}
+            ${records.runningSummary?.longestDistance ? `
+              <div class="sport-record-row">
+                <div><strong>Plus longue sortie</strong><small>${formatDate(records.runningSummary.longestDistance.date)}</small></div>
+                <b>${escapeHtml(records.runningSummary.longestDistance.valueLabel)}</b>
+              </div>
+            ` : ""}
             ${records.running.length ? records.running.map(record => `
               <div class="sport-record-row">
                 <div><strong>${escapeHtml(record.distanceLabel)}</strong><small>${formatDate(record.date)}</small></div>
                 <b>${escapeHtml(record.valueLabel)}</b>
               </div>
-            `).join("") : `<div class="sport-empty compact"><p>Aucun record course disponible.</p></div>`}
+            `).join("") : (!records.runningSummary?.fastestPace && !records.runningSummary?.longestDistance ? `<div class="sport-empty compact"><p>Aucun record course disponible.</p></div>` : "")}
           </div>
         </article>
 

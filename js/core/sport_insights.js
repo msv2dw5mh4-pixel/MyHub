@@ -56,17 +56,47 @@ function durationLabel(minutes) {
   return h ? `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}` : `${m}:${String(s).padStart(2,"0")}`;
 }
 
+function sessionDistanceKm(session = {}) {
+  const km = Number(session.distanceKm || 0);
+  if (km > 0) return km;
+
+  const meters = Number(session.distanceMeters || 0);
+  if (meters > 0) return meters / 1000;
+
+  const rawDistance = Number(session.distance || 0);
+  if (rawDistance <= 0) return 0;
+
+  return String(session.distanceUnit || "km").toLowerCase() === "m"
+    ? rawDistance / 1000
+    : rawDistance;
+}
+
+function sessionDurationMinutes(session = {}) {
+  return Number(session.duration || session.durationMin || 0);
+}
+
 function activityRecord(sessions, targetKm, predicate) {
   const tolerance = Math.max(0.15, targetKm * 0.08);
   const rows = sessions
-    .filter(session => session.status === "completed" && session.type === "activity" && predicate(session))
-    .filter(session => Number(session.distanceKm || 0) >= targetKm - tolerance && Number(session.distanceKm || 0) <= targetKm + tolerance)
-    .filter(session => Number(session.duration || 0) > 0)
-    .map(session => {
-      const distanceKm = Number(session.distanceKm || 0);
-      const projectedMinutes = distanceKm > 0 ? Number(session.duration) * (targetKm / distanceKm) : Number(session.duration);
-      return { session, projectedMinutes };
-    })
+    .filter(session =>
+      session.status === "completed" &&
+      session.type === "activity" &&
+      predicate(session)
+    )
+    .map(session => ({
+      session,
+      distanceKm: sessionDistanceKm(session),
+      duration: sessionDurationMinutes(session)
+    }))
+    .filter(row =>
+      row.distanceKm >= targetKm - tolerance &&
+      row.distanceKm <= targetKm + tolerance &&
+      row.duration > 0
+    )
+    .map(row => ({
+      session: row.session,
+      projectedMinutes: row.duration * (targetKm / row.distanceKm)
+    }))
     .sort((a,b) => a.projectedMinutes - b.projectedMinutes);
 
   return rows[0] || null;
@@ -94,6 +124,36 @@ export async function getSportRecords() {
       sessionId: record.session.id
     } : null;
   }).filter(Boolean);
+
+  const completedRuns = sessions
+    .filter(session => session.status === "completed" && session.type === "activity" && isRun(session))
+    .map(session => ({
+      session,
+      distanceKm: sessionDistanceKm(session),
+      duration: sessionDurationMinutes(session)
+    }))
+    .filter(row => row.distanceKm > 0 && row.duration > 0);
+
+  const fastestRun = [...completedRuns]
+    .sort((a,b) => (a.duration / a.distanceKm) - (b.duration / b.distanceKm))[0] || null;
+
+  const longestRun = [...completedRuns]
+    .sort((a,b) => b.distanceKm - a.distanceKm)[0] || null;
+
+  const runningSummary = {
+    fastestPace: fastestRun ? {
+      pace: fastestRun.duration / fastestRun.distanceKm,
+      valueLabel: `${durationLabel(fastestRun.duration / fastestRun.distanceKm)} /km`,
+      date: fastestRun.session.date,
+      sessionId: fastestRun.session.id
+    } : null,
+    longestDistance: longestRun ? {
+      km: longestRun.distanceKm,
+      valueLabel: `${Number(longestRun.distanceKm.toFixed(2)).toLocaleString("fr-FR")} km`,
+      date: longestRun.session.date,
+      sessionId: longestRun.session.id
+    } : null
+  };
 
   const swimming = swimDistances.map(km => {
     const record = activityRecord(sessions, km, isSwim);
@@ -218,7 +278,7 @@ export async function getSportRecords() {
     .filter(Boolean)
     .sort((a,b) => a.sport.localeCompare(b.sport, "fr"));
 
-  return { running, swimming, strength, otherSports };
+  return { running, runningSummary, swimming, strength, otherSports };
 }
 
 function weekStats(sessions, sets, startDate) {

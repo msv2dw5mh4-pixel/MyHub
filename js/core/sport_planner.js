@@ -798,6 +798,16 @@ export async function completeSportPlanFromActivity(activity, selectedGoalId = n
   return null;
 }
 
+function sessionDistanceKm(session = {}) {
+  const km = Number(session.distanceKm || 0);
+  if (km > 0) return km;
+  const meters = Number(session.distanceMeters || 0);
+  if (meters > 0) return meters / 1000;
+  const raw = Number(session.distance || 0);
+  if (raw <= 0) return 0;
+  return String(session.distanceUnit || "km").toLowerCase() === "m" ? raw / 1000 : raw;
+}
+
 function e1rm(weight, reps) {
   const w = Number(weight || 0);
   const r = Math.max(1, Number(reps || 1));
@@ -897,7 +907,7 @@ export function performanceGoalState(goal, sessions) {
       session.status === "completed" &&
       session.type === "activity" &&
       sportMatches(session, goal.sport) &&
-      Number(session.distanceKm || 0) >= targetKm &&
+      sessionDistanceKm(session) >= targetKm &&
       Number(session.duration || 0) > 0
     )
     .sort((a,b) => Number(a.duration || 0) - Number(b.duration || 0));
@@ -912,7 +922,7 @@ export function performanceGoalState(goal, sessions) {
   const total = Math.max(1, diffDays(goal.startDate || todayISO(), goal.deadline || todayISO()));
   const elapsed = clamp(diffDays(goal.startDate || todayISO(), todayISO()) / total);
   const expectedTime = baselineTargetTime + (targetTime - baselineTargetTime) * elapsed;
-  const achieved = Boolean(bestSession && Number(bestSession.distanceKm || 0) >= targetKm && Number(bestSession.duration || 0) <= targetTime);
+  const achieved = Boolean(bestSession && sessionDistanceKm(bestSession) >= targetKm && Number(bestSession.duration || bestSession.durationMin || 0) <= targetTime);
 
   return {
     targetKm,

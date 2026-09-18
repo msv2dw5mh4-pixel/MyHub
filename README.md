@@ -1,3 +1,24 @@
+# MyHub V30.5 — Correctif records Course à pied
+
+- Les records relisent désormais correctement les anciennes et nouvelles structures de distance.
+- Toute activité libre Course à pied terminée peut alimenter les records.
+- Ajout de Meilleure allure et Plus longue sortie, calculées sur toutes les courses.
+- Les records 1 km, 5 km, 10 km et semi restent des records de distance de référence.
+- Les objectifs Course utilisent aussi la distance normalisée.
+
+# MyHub V30.4 — Correctifs Tâches liées
+
+- Modification des tâches existantes via la modale robuste.
+- Les tâches terminées restent modifiables.
+- Création d'une tâche depuis un bien Entretien corrigée.
+- Le bien est prélié automatiquement à la nouvelle tâche.
+
+# MyHub V30.3 — Correctif modification des tâches
+
+- Le bouton Modifier ouvre maintenant la modale robuste utilisée depuis V28.2.
+- Les tâches terminées non-système restent modifiables.
+- Le bouton Demain reste masqué pour une tâche terminée.
+
 # MyHub V30.2 — Correctif recherche Repas
 
 # MyHub V30.1 — Correctif recherche Repas + Plat aléatoire
