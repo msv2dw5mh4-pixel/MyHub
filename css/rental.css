@@ -1,0 +1,69 @@
+.rental-v31{display:grid;gap:14px;min-width:0}
+.rental-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.rental-hero h2{margin:3px 0 5px;font-size:28px}.rental-hero p{margin:0;color:var(--muted)}
+.rental-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--surface-soft);padding:4px;border-radius:16px;overflow:hidden}
+.rental-tabs button{border:0;background:transparent;color:var(--muted);padding:10px 7px;border-radius:12px;font-size:11px;font-weight:850;min-width:0}
+.rental-tabs button.active{background:var(--surface);color:var(--text);box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.rental-year-row,.rental-calendar-head{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:8px}
+.rental-year-row>div,.rental-calendar-head>div{text-align:center;display:grid;gap:2px;text-transform:capitalize}
+.rental-year-row span,.rental-calendar-head span{font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:900;letter-spacing:.05em}
+.rental-year-row strong,.rental-calendar-head strong{font-size:17px}
+.rental-year-nav{width:42px;height:42px}
+.rental-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.rental-kpis article{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:13px;display:grid;gap:4px;min-width:0}
+.rental-kpis span{font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:850}.rental-kpis strong{font-size:20px}.rental-kpis small{font-size:10px;color:var(--muted)}
+.rental-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:14px;display:grid;gap:12px}
+.rental-card h3{margin:0}.rental-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.rental-card-head h3{font-size:15px}.rental-card-head p{margin:3px 0 0;color:var(--muted);font-size:11px}
+.rental-month-chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end;min-height:150px}
+.rental-month-bar{display:grid;grid-template-rows:110px auto auto;gap:3px;text-align:center;min-width:0}
+.rental-month-bar-track{height:110px;border-radius:8px;background:var(--surface-soft);display:flex;align-items:end;overflow:hidden}
+.rental-month-bar-track span{width:100%;background:var(--accent);border-radius:8px 8px 0 0;min-height:0}
+.rental-month-bar strong{font-size:9px;text-transform:uppercase;color:var(--muted)}.rental-month-bar small{font-size:8px;color:var(--muted);min-height:10px}
+.rental-utilization{display:grid;gap:10px}.rental-util-row{display:grid;grid-template-columns:105px 1fr 42px;gap:8px;align-items:center}.rental-util-row>span{font-size:11px;font-weight:800}.rental-util-row>div{height:8px;border-radius:99px;background:var(--surface-soft);overflow:hidden}.rental-util-row i{height:100%;display:block;background:var(--accent);border-radius:99px}.rental-util-row>strong{text-align:right;font-size:11px}
+.rental-booking-list{display:grid;gap:7px}.rental-booking-row{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;border:1px solid var(--border);border-radius:15px;padding:10px;background:var(--surface);cursor:pointer;min-width:0}
+.rental-booking-date{display:grid;gap:3px}.rental-booking-date strong{font-size:12px}.rental-booking-date span{font-size:9px;color:var(--muted)}
+.rental-booking-main{display:grid;gap:3px;min-width:0}.rental-booking-main strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rental-booking-main span,.rental-booking-main small{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rental-booking-side{display:grid;justify-items:end;gap:5px}.rental-booking-side b{font-size:12px}
+.rental-status{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:4px 8px;font-size:9px;font-weight:900;white-space:nowrap}
+.rental-status.reserved{background:#eaf2ff;color:#1d5fba}.rental-status.active{background:#e8f7ed;color:#17743a}.rental-status.returned,.rental-status.free{background:#edf2f7;color:#566173}.rental-status.cancelled{background:#f4f4f4;color:#888}.rental-status.late{background:#fff1e5;color:#a64e00}
+.rental-privacy-note{display:grid;gap:4px;padding:12px 13px;border-radius:16px;background:var(--surface-soft);font-size:11px;color:var(--muted)}.rental-privacy-note strong{color:var(--text)}
+.rental-empty{display:grid;place-items:center;text-align:center;gap:4px;padding:22px;color:var(--muted)}.rental-empty>span{font-size:28px}.rental-empty strong{color:var(--text)}.rental-empty p{margin:0;font-size:11px}
+.rental-calendar-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10px;font-weight:850;color:var(--muted)}
+.rental-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.rental-calendar-weekday{text-align:center;font-size:9px;color:var(--muted);font-weight:900;text-transform:uppercase;padding:3px}
+.rental-calendar-day{min-height:92px;border:1px solid var(--border);border-radius:11px;background:var(--surface);padding:6px;min-width:0;overflow:hidden}.rental-calendar-day.outside{opacity:.38}.rental-calendar-day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.rental-calendar-day>strong{font-size:10px}.rental-calendar-day>div{display:grid;gap:3px;margin-top:5px}.rental-calendar-booking{border:0;border-radius:6px;padding:4px 5px;font-size:8px;font-weight:800;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barrel-1{--barrel-color:#dbeafe;--barrel-text:#245aa4}.barrel-2{--barrel-color:#dcfce7;--barrel-text:#267440}.barrel-3{--barrel-color:#fef3c7;--barrel-text:#8f6210}
+.rental-calendar-booking.barrel-1,.rental-barrel-checks .barrel-1{background:var(--barrel-color);color:var(--barrel-text)}.rental-calendar-booking.barrel-2,.rental-barrel-checks .barrel-2{background:var(--barrel-color);color:var(--barrel-text)}.rental-calendar-booking.barrel-3,.rental-barrel-checks .barrel-3{background:var(--barrel-color);color:var(--barrel-text)}
+.rental-availability-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rental-availability-grid article{display:grid;gap:4px;padding:11px;border-radius:14px;background:var(--surface-soft)}.rental-availability-grid span{font-size:20px}.rental-availability-grid strong{font-size:11px}.rental-availability-grid small{font-size:9px;color:var(--muted)}.rental-availability-grid article.free{outline:1px solid #c9e9d4}.rental-availability-grid article.busy{outline:1px solid #f1d4b5}
+.rental-booking-list-all{margin-top:2px}.rental-cancelled summary{font-size:11px;font-weight:800;color:var(--muted);cursor:pointer;margin-bottom:8px}
+.rental-barrel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.rental-barrel-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden}.rental-barrel-card>img,.rental-barrel-placeholder{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--surface-soft);display:grid;place-items:center;font-size:44px}.rental-barrel-content{padding:13px;display:grid;gap:11px}.rental-barrel-content h3{margin:2px 0 0}.rental-barrel-content>div:first-child span{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:900}.rental-barrel-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rental-barrel-stats>div{background:var(--surface-soft);border-radius:12px;padding:8px;display:grid;gap:2px}.rental-barrel-stats strong{font-size:13px}.rental-barrel-stats span{font-size:9px;color:var(--muted)}.rental-barrel-content p{margin:0;font-size:11px;color:var(--muted)}
+.rental-back{border:0;background:transparent;color:var(--text);font-weight:850;padding:2px 0;justify-self:start}.rental-detail-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;background:linear-gradient(135deg,#111827,#24382d);color:#fff;padding:18px;border-radius:22px}.rental-detail-hero h2{margin:3px 0 5px}.rental-detail-hero p{margin:0;color:#d2d8e2;font-size:11px}.rental-detail-actions{display:flex;gap:8px}
+.rental-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.rental-detail-grid>div,.rental-condition-grid>div{background:var(--surface-soft);padding:10px;border-radius:13px;display:grid;gap:3px}.rental-detail-grid span,.rental-condition-grid span{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:850}.rental-detail-grid strong,.rental-condition-grid strong{font-size:12px}.rental-detail-grid small{font-size:9px;color:var(--muted)}
+.rental-contact-list{display:grid;gap:2px}.rental-contact-list>div{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--border)}.rental-contact-list>div:first-child{border-top:0}.rental-contact-list span{font-size:10px;color:var(--muted)}.rental-contact-list strong{font-size:11px;text-align:right}
+.rental-photo-sections{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rental-photo-sections>div{display:grid;gap:7px}.rental-photo-sections>div>strong{font-size:11px}.rental-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.rental-photo-grid img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px}.rental-photo-empty{display:grid;place-items:center;min-height:90px;border:1px dashed var(--border);border-radius:12px;color:var(--muted);font-size:10px;text-align:center;padding:8px}
+.rental-condition-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rental-damage{padding:10px;border-radius:13px;background:#fff5f5}.rental-damage strong{font-size:11px}.rental-damage p,.rental-notes{margin:5px 0 0;font-size:11px;white-space:pre-wrap;color:var(--muted)}
+.rental-id-card>img{max-width:100%;max-height:360px;object-fit:contain;border-radius:14px;background:var(--surface-soft)}.rental-delete{border:0;background:transparent;color:#b33;font-weight:800;padding:10px}
+.rental-form-section{display:grid;gap:10px;padding:12px;border:1px solid var(--border);border-radius:16px}.rental-form-section h3{margin:0;font-size:13px}.rental-sensitive-section{background:#fffaf1}.rental-sensitive-section>p{margin:0;color:var(--muted);font-size:10px;line-height:1.4}
+.rental-barrel-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.rental-barrel-checks label{border-radius:12px;padding:9px;display:flex;align-items:center;gap:7px;font-size:10px;font-weight:800}.rental-barrel-checks input{width:auto!important;min-height:auto!important}
+.rental-conflict-note{font-size:10px;min-height:16px}.rental-conflict-note.ok{color:#20723d}.rental-conflict-note.danger{color:#ae3d2f}
+.rental-remove-media{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted)}.rental-remove-media input{width:auto!important;min-height:auto!important}
+.rental-form-preview{max-width:100%;max-height:230px;border-radius:14px;object-fit:contain;background:var(--surface-soft)}.rental-id-preview{max-height:300px}
+
+@media(max-width:700px){
+  .rental-hero{align-items:center}.rental-hero h2{font-size:25px}.rental-hero p{font-size:11px}.rental-hero .primary-btn{padding-inline:12px;white-space:nowrap}
+  .rental-tabs{overflow:auto;grid-template-columns:repeat(4,minmax(94px,1fr));scrollbar-width:none}.rental-tabs::-webkit-scrollbar{display:none}
+  .rental-kpis{grid-template-columns:1fr 1fr}.rental-kpis article:first-child{grid-column:1/-1}
+  .rental-month-chart{overflow-x:auto;grid-template-columns:repeat(12,28px);padding-bottom:4px}
+  .rental-util-row{grid-template-columns:90px 1fr 36px}
+  .rental-calendar{gap:2px}.rental-calendar-day{min-height:76px;padding:4px}.rental-calendar-weekday{font-size:8px}.rental-calendar-booking{font-size:0;padding:4px}.rental-calendar-booking:before{content:"●";font-size:8px}
+  .rental-availability-grid{grid-template-columns:1fr}.rental-barrel-grid{grid-template-columns:1fr}
+  .rental-booking-row{grid-template-columns:62px 1fr}.rental-booking-side{grid-column:2;grid-row:2;display:flex;justify-content:space-between;align-items:center}
+  .rental-detail-grid{grid-template-columns:1fr 1fr}.rental-contact-list>div{grid-template-columns:105px 1fr}
+  .rental-barrel-checks{grid-template-columns:1fr}.rental-photo-sections{grid-template-columns:1fr}.rental-photo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+@media(max-width:390px){
+  .rental-kpis{grid-template-columns:1fr}.rental-kpis article:first-child{grid-column:auto}
+  .rental-detail-grid,.rental-condition-grid{grid-template-columns:1fr}
+  .rental-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

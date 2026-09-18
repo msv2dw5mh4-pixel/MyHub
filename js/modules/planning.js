@@ -145,6 +145,7 @@ function sourceLabel(source) {
   if (source === "sport") return "Sport";
   if (source === "project") return "Projet";
   if (source === "learning") return "Apprentissage";
+  if (source === "rental") return "Location";
   return "Événement";
 }
 
@@ -217,14 +218,16 @@ function expandCalendarEvents(events, startDate, endDate) {
 }
 
 async function getPlanningData(startDate, endDate) {
-  const [tasks, objectives, milestones, sports, events, projects, learningTopics] = await Promise.all([
+  const [tasks, objectives, milestones, sports, events, projects, learningTopics, rentalBookings, rentalBarrels] = await Promise.all([
     getAll("tasks"),
     getAll("objectives"),
     getAll("objectiveMilestones"),
     getAll("sportSessions"),
     getAll("calendarEvents"),
     getAll("projects"),
-    getAll("learningTopics")
+    getAll("learningTopics"),
+    getAll("rentalBookings"),
+    getAll("rentalBarrels")
   ]);
 
   const rows = [];
@@ -291,6 +294,45 @@ async function getPlanningData(startDate, endDate) {
       route: "objectives"
     });
   });
+
+
+
+  rentalBookings
+    .filter(booking => booking.status !== "cancelled")
+    .forEach(booking => {
+      const names = (booking.barrelIds || [])
+        .map(id => rentalBarrels.find(barrel => barrel.id === id)?.name)
+        .filter(Boolean)
+        .join(" · ");
+
+      if (booking.startDate >= startDate && booking.startDate <= endDate) {
+        rows.push({
+          id: `rental:start:${booking.id}`,
+          sourceId: booking.id,
+          source: "rental",
+          date: booking.startDate,
+          time: booking.pickupTime || "",
+          title: `Départ location · ${booking.customerName || "Locataire"}`,
+          subtitle: `${names || "Tonneau"}${booking.eventType ? ` · ${booking.eventType}` : ""}`,
+          done: booking.status === "returned",
+          route: "rental"
+        });
+      }
+
+      if (booking.endDate >= startDate && booking.endDate <= endDate) {
+        rows.push({
+          id: `rental:return:${booking.id}`,
+          sourceId: booking.id,
+          source: "rental",
+          date: booking.endDate,
+          time: booking.returnTime || "",
+          title: `Retour location · ${booking.customerName || "Locataire"}`,
+          subtitle: `${names || "Tonneau"}${booking.depositStatus === "received" ? " · caution à rendre" : ""}`,
+          done: booking.status === "returned",
+          route: "rental"
+        });
+      }
+    });
 
 
   projects.forEach(project => {
@@ -933,6 +975,7 @@ export async function getPlanningSummary() {
     tasks: rows.filter(r => r.source === "task" && !r.done).length,
     objectives: rows.filter(r => r.source === "objective" && !r.done).length,
     sports: rows.filter(r => r.source === "sport").length,
+    rentals: rows.filter(r => r.source === "rental").length,
     nextLabel: rows[0]?.title || null,
     nextTime: rows[0]?.time || ""
   };

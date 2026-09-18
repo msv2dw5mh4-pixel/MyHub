@@ -1,3 +1,9 @@
+# MyHub V31 — Location
+
+Nouveau module de gestion des 3 tonneaux en location : planning, réservations, locataires, prix, cautions, photos avant/après, pièce d'identité et tableau de bord annuel.
+
+La base IndexedDB passe en version 21 avec les stores `rentalBarrels` et `rentalBookings`.
+
 # MyHub V30.5 — Correctif records Course à pied
 
 - Les records relisent désormais correctement les anciennes et nouvelles structures de distance.

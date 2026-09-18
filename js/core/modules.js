@@ -1,6 +1,7 @@
 export const modules = [
   { id: "stats", name: "Stats globales", icon: "📊", route: "stats", enabled: true, description: "Bilan semaine, mois et année en croisant toutes les données MyHub." },
   { id: "planning", name: "Planning", icon: "📅", route: "planning", enabled: true, description: "Agenda quotidien, semaine, mois et événements personnels." },
+  { id: "rental", name: "Location", icon: "🛢️", route: "rental", enabled: true, description: "Tonneaux en location, planning, locataires, cautions, photos avant/après et bilan annuel." },
   { id: "maintenance", name: "Entretien", icon: "🔧", route: "maintenance", enabled: true, description: "Mes biens, entretien, achat, garantie, tâches liées, documents et passage en vente." },
   { id: "living", name: "Aquariums & Plantes", icon: "🌿", route: "living", enabled: true, description: "Aquariums, populations, naissances, comptages, plantes, arrosages et soins récurrents." },
   { id: "documents", name: "Documents", icon: "📂", route: "documents", enabled: true, description: "Documents importants, échéances et rappels de renouvellement." },

@@ -1,4 +1,4 @@
-const CACHE = "myhub-v30-5-run-record-fix";
+const CACHE = "myhub-v31-location";
 
 const ASSETS = [
   "./",
@@ -21,6 +21,7 @@ const ASSETS = [
   "./css/search.css",
   "./css/people.css",
   "./css/meals.css",
+  "./css/rental.css",
   "./js/app.js",
   "./js/core/db.js",
   "./js/core/modules.js",
@@ -59,6 +60,7 @@ const ASSETS = [
   "./js/modules/people.js",
   "./js/modules/meals.js",
   "./js/modules/shopping.js",
+  "./js/modules/rental.js",
   "./manifest.webmanifest",
   "./assets/icons/icon-192.svg",
   "./assets/icons/icon-512.svg"

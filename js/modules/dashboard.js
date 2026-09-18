@@ -20,6 +20,7 @@ import { getBackupStatus } from "../core/backup.js";
 import { getPeopleSummary } from "./people.js";
 import { getMealsSummary } from "./meals.js";
 import { getShoppingSummary } from "./shopping.js";
+import { getRentalSummary } from "./rental.js";
 
 function formatMoney(value) {
   return new Intl.NumberFormat("fr-FR", {
@@ -121,7 +122,8 @@ export async function renderDashboard(container) {
     backup,
     people,
     meals,
-    shopping
+    shopping,
+    rental
   ] = await Promise.all([
     getPlanningSummary(),
     getPlanningDayItems(),
@@ -141,7 +143,8 @@ export async function renderDashboard(container) {
     getBackupStatus(),
     getPeopleSummary(),
     getMealsSummary(),
-    getShoppingSummary()
+    getShoppingSummary(),
+    getRentalSummary()
   ]);
 
   const today = new Intl.DateTimeFormat("fr-FR", {
@@ -319,6 +322,15 @@ export async function renderDashboard(container) {
       value: formatSignedMoney(stock.profit),
       sub: `${stock.forSale} en vente`,
       route: "stock"
+    },
+    {
+      icon: "🛢️",
+      name: "Location",
+      value: rental.active ? `${rental.active} en cours` : `${rental.upcoming} à venir`,
+      sub: rental.nextDate
+        ? `${rental.nextDate.split("-").reverse().join("/")} · ${rental.nextCustomer || "prochaine location"}`
+        : `${formatMoney(rental.revenueYear)} cette année`,
+      route: "rental"
     },
     {
       icon: "🔧",

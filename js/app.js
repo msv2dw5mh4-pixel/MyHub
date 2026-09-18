@@ -17,6 +17,7 @@ import { renderIdeas, requestNewIdea } from "./modules/ideas.js";
 import { renderPeople, requestNewPerson } from "./modules/people.js";
 import { renderMeals, requestNewMeal, ensureMealsSeeded } from "./modules/meals.js";
 import { renderShopping, requestNewShoppingItem } from "./modules/shopping.js";
+import { renderRental, requestNewRentalBooking } from "./modules/rental.js";
 import { renderModules } from "./modules/modules.js";
 import { renderSettings } from "./modules/settings.js";
 import { renderSearch } from "./modules/search.js";
@@ -46,6 +47,7 @@ const routes = {
   people: { title: "Personnes", render: renderPeople },
   meals: { title: "Repas", render: renderMeals },
   shopping: { title: "Courses", render: renderShopping },
+  rental: { title: "Location", render: renderRental },
   tasks: { title: "Tâches", render: renderTasks },
   stock: { title: "Stock", render: renderStock },
   tracker: { title: "Tracker", render: renderTracker },
@@ -173,6 +175,12 @@ function showQuickAdd() {
       </button>
 
 
+
+      <button class="list-item" id="quick-add-rental" style="width:100%;text-align:left;cursor:pointer">
+        <div style="font-size:24px">🛢️</div>
+        <div class="task-main"><div class="task-title">Nouvelle location</div><div class="task-desc">Réserver un ou plusieurs tonneaux pour un locataire.</div></div>
+      </button>
+
       <button class="list-item" id="quick-add-meal" style="width:100%;text-align:left;cursor:pointer">
         <div style="font-size:24px">🍽️</div>
         <div class="task-main"><div class="task-title">Nouveau repas</div><div class="task-desc">Ajouter un plat à la bibliothèque Repas.</div></div>
@@ -229,6 +237,7 @@ function showQuickAdd() {
   document.getElementById("quick-add-learning").addEventListener("click", () => { closeModal(); requestNewLearningTopic(); });
   document.getElementById("quick-add-idea").addEventListener("click", () => { closeModal(); requestNewIdea(); });
   document.getElementById("quick-add-person").addEventListener("click", () => { closeModal(); requestNewPerson(); });
+  document.getElementById("quick-add-rental").addEventListener("click", () => { closeModal(); requestNewRentalBooking(); });
   document.getElementById("quick-add-meal").addEventListener("click", () => { closeModal(); requestNewMeal(); });
   document.getElementById("quick-add-shopping").addEventListener("click", () => { closeModal(); requestNewShoppingItem(); });
 }
