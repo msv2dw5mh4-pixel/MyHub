@@ -1,4 +1,4 @@
-const CACHE = "myhub-v33-1-settings-version";
+const CACHE = "myhub-v33-2-tasks-folders";
 
 const ASSETS = [
   "./",
@@ -29,6 +29,7 @@ const ASSETS = [
   "./js/core/modules.js",
   "./js/core/ui.js",
   "./js/core/task_modal_guard.js",
+  "./js/core/task_folders.js",
   "./js/core/objective_tasks.js",
   "./js/core/maintenance_tasks.js",
   "./js/core/document_tasks.js",

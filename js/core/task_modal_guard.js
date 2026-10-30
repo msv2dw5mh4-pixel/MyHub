@@ -1,5 +1,6 @@
 import { getAll, putOne } from "./db.js";
 import { escapeHtml, uid, openModal, closeModal } from "./ui.js";
+import { getTaskFolders, ensureTaskFolder, sameTaskFolder, DEFAULT_TASK_FOLDER } from "./task_folders.js";
 
 async function safeGetAll(storeName) {
   try {
@@ -137,6 +138,26 @@ async function hydrateTaskLinks(preset = {}) {
   }
 }
 
+
+async function hydrateTaskFolderSelect(preset = {}) {
+  const select = document.getElementById("task-folder-fast");
+  if (!select) return;
+
+  try {
+    const folders = await getTaskFolders();
+    const selected = preset.folder || DEFAULT_TASK_FOLDER;
+    const values = [...new Set([DEFAULT_TASK_FOLDER, ...folders, selected].filter(Boolean))];
+
+    select.innerHTML = values.map(folder => `
+      <option value="${escapeHtml(folder)}" ${sameTaskFolder(folder, selected) ? "selected" : ""}>
+        📁 ${escapeHtml(folder)}
+      </option>
+    `).join("");
+  } catch (error) {
+    console.warn("[Tâches] Impossible de charger les dossiers :", error);
+  }
+}
+
 export function openImmediateTaskModal(preset = {}) {
   const editing = Boolean(preset?.id);
 
@@ -174,13 +195,10 @@ export function openImmediateTaskModal(preset = {}) {
 
       <div class="field">
         <label for="task-folder-fast">Dossier</label>
-        <input
-          id="task-folder-fast"
-          name="folder"
-          maxlength="60"
-          value="${escapeHtml(preset.folder || "")}"
-          placeholder="Général, Maison, Travail…"
-        >
+        <select id="task-folder-fast" name="folder">
+          <option value="${escapeHtml(preset.folder || DEFAULT_TASK_FOLDER)}">📁 ${escapeHtml(preset.folder || DEFAULT_TASK_FOLDER)}</option>
+        </select>
+        <small class="muted">Les dossiers se créent et se gèrent depuis le module Tâches.</small>
       </div>
 
       <div class="field">
@@ -324,6 +342,7 @@ export function openImmediateTaskModal(preset = {}) {
       }
 
       try {
+        task.folder = await ensureTaskFolder(task.folder);
         await putOne("tasks", task);
 
         closeModal();
@@ -351,7 +370,8 @@ export function openImmediateTaskModal(preset = {}) {
       }
     });
 
-  // Chargement secondaire : il ne peut plus bloquer l'ouverture du formulaire.
+  // Chargements secondaires : ils ne bloquent jamais l'ouverture du formulaire.
+  hydrateTaskFolderSelect(preset);
   hydrateTaskLinks(preset);
 
   setTimeout(() => {

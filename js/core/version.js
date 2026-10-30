@@ -1,14 +1,17 @@
-export const APP_VERSION = "V33.1";
+export const APP_VERSION = "V33.2";
 
 export const RELEASE_INFO = {
   version: APP_VERSION,
   date: "30 octobre 2026",
-  title: "Version visible dans les Réglages",
-  summary: "MyHub affiche maintenant clairement la version installée et le contenu de la dernière mise à jour.",
+  title: "Tâches cliquables et dossiers",
+  summary: "Les tâches peuvent maintenant être ouvertes directement en touchant leur carte, et elles peuvent être rangées dans de vrais dossiers.",
   details: [
-    "Ajout d’un encart « Version de MyHub » dans les Réglages.",
-    "Affichage du numéro de version, de la date et du dernier changement poussé.",
-    "Ajout d’une fenêtre « Voir les nouveautés » avec le détail de la version.",
-    "Les nouvelles sauvegardes indiquent désormais la vraie version de MyHub au lieu de rester bloquées sur V31."
+    "Un clic sur une tâche personnelle ouvre directement sa fiche pour modifier le nom, la date, la priorité, le dossier ou les liens.",
+    "Les tâches automatiques ouvrent leur module d’origine afin de conserver les relations MyHub intactes.",
+    "Ajout de dossiers de tâches persistants avec création, filtrage, renommage et suppression.",
+    "Supprimer un dossier ne supprime jamais ses tâches : elles sont déplacées dans Général.",
+    "Le dossier peut être choisi depuis les formulaires de création et de modification.",
+    "Correction du traitement des rappels Personnes lors de leur suppression.",
+    "Correction de la synchronisation de progression des objectifs liés aux tâches."
   ]
 };

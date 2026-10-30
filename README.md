@@ -1,3 +1,7 @@
+# MyHub V33.2 — Tâches cliquables & dossiers
+
+Cette version améliore le module Tâches : les cartes de tâches personnelles sont directement cliquables pour les modifier et les tâches peuvent être organisées dans des dossiers persistants, avec création, filtrage, renommage et suppression sécurisée.
+
 # MyHub V33.1 — Version dans les Réglages
 
 Cette mise à jour ajoute une source unique de version (`js/core/version.js`) afin que le numéro affiché dans les Réglages et celui inscrit dans les sauvegardes restent cohérents.

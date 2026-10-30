@@ -17,7 +17,8 @@ import {
   syncRecurringObjectiveTasks,
   syncMilestoneFromTask,
   unlinkMilestoneTaskReference,
-  skipRecurringTaskOccurrence
+  skipRecurringTaskOccurrence,
+  syncObjectiveProgressFromActions
 } from "../core/objective_tasks.js";
 
 import {
@@ -28,11 +29,13 @@ import { dismissDocumentTask, syncDocumentTasks } from "../core/document_tasks.j
 import { skipSportPlanTask, syncSportPlanTasks } from "../core/sport_planner.js";
 import { completeLivingCareTask, syncLivingCareTasks, skipLivingCareTask } from "../core/living_tasks.js";
 import { dismissPeopleReminderTask, syncPeopleReminderTasks } from "../core/people_tasks.js";
+import { getTaskFolders, createTaskFolder, renameTaskFolder, deleteTaskFolder, ensureTaskFolder, sameTaskFolder, DEFAULT_TASK_FOLDER } from "../core/task_folders.js";
 
 let activeFilter = "focus";
 let linkedFilter = "all";
 let objectiveContextId = null;
 let taskSearch = "";
+let activeFolder = "all";
 
 async function safeGetAll(storeName) {
   try {
@@ -133,6 +136,10 @@ function filterTasks(tasks) {
 
     default:
       filtered = tasks.filter(task => !task.done);
+  }
+
+  if (activeFolder !== "all") {
+    filtered = filtered.filter(task => sameTaskFolder(task.folder || DEFAULT_TASK_FOLDER, activeFolder));
   }
 
   const query = taskSearch.trim().toLocaleLowerCase("fr-FR");
@@ -246,7 +253,17 @@ function sourceBadge(task) {
 }
 
 function isSystemTask(task) {
-  return ["maintenance", "document", "sport-plan", "living-care", "objective-recurring", "people-reminder"].includes(task.source);
+  return isAutomaticTask(task);
+}
+
+function systemTaskRoute(task) {
+  if (task.source === "maintenance") return "maintenance";
+  if (task.source === "document") return "documents";
+  if (task.source === "sport-plan") return "sport";
+  if (task.source === "living-care") return "living";
+  if (["objective-recurring", "objective-milestone"].includes(task.source)) return "objectives";
+  if (task.source === "people-reminder") return "people";
+  return null;
 }
 
 function taskDateAction(task) {
@@ -280,7 +297,7 @@ function taskRow(task, objectiveMap, projectMap, assetMap, aquariumMap, plantMap
   ].filter(Boolean).join(" ");
 
   return `
-    <article class="list-item ${task.done ? "done" : ""}" data-task-id="${task.id}">
+    <article class="list-item ${task.done ? "done" : ""} ${!isSystemTask(task) ? "task-row-clickable" : "task-row-system"}" data-task-id="${task.id}" data-task-editable="${!isSystemTask(task) ? "true" : "false"}">
       <input class="checkbox task-toggle" type="checkbox" ${task.done ? "checked" : ""} aria-label="Terminer la tâche">
 
       <div class="task-main">
@@ -307,14 +324,15 @@ export async function renderTasks(container) {
   await syncLivingCareTasks();
   await syncPeopleReminderTasks();
 
-  const [tasksRaw, objectives, projects, assets, aquariums, plants, people] = await Promise.all([
+  const [tasksRaw, objectives, projects, assets, aquariums, plants, people, taskFolders] = await Promise.all([
     getAll("tasks"),
     getAll("objectives"),
     getAll("projects"),
     getAll("maintenanceAssets"),
     getAll("livingAquariums"),
     getAll("livingPlants"),
-    getAll("people")
+    getAll("people"),
+    getTaskFolders()
   ]);
 
   const tasks = sortTasks(tasksRaw);
@@ -335,6 +353,13 @@ export async function renderTasks(container) {
   const doneCount = tasks.filter(task => task.done).length;
   const contextObjective = objectiveContextId ? objectiveMap.get(objectiveContextId) : null;
 
+  if (activeFolder !== "all" && !taskFolders.some(folder => sameTaskFolder(folder, activeFolder))) {
+    activeFolder = "all";
+  }
+
+  const userOpenTasks = tasks.filter(task => !task.done && !isAutomaticTask(task));
+  const folderCount = folder => userOpenTasks.filter(task => sameTaskFolder(task.folder || DEFAULT_TASK_FOLDER, folder)).length;
+
   container.innerHTML = `
     <section class="tasks-v32">
       <div class="section-head">
@@ -347,6 +372,30 @@ export async function renderTasks(container) {
 
         <button class="primary-btn" id="add-task">+ Tâche</button>
       </div>
+
+      <section class="task-folders-panel">
+        <div class="task-folders-head">
+          <div>
+            <strong>Dossiers</strong>
+            <span>Range tes tâches comme dans une liste To Do.</span>
+          </div>
+          <div class="task-folders-actions">
+            <button class="ghost-btn" id="task-manage-folders">Gérer</button>
+            <button class="primary-btn" id="task-add-folder">+ Dossier</button>
+          </div>
+        </div>
+
+        <div class="task-folder-strip" aria-label="Dossiers de tâches">
+          <button class="task-folder-chip ${activeFolder === "all" ? "active" : ""}" data-task-folder="all">
+            Toutes <span>${userOpenTasks.length}</span>
+          </button>
+          ${taskFolders.map(folder => `
+            <button class="task-folder-chip ${activeFolder !== "all" && sameTaskFolder(activeFolder, folder) ? "active" : ""}" data-task-folder="${escapeHtml(folder)}">
+              📁 ${escapeHtml(folder)} <span>${folderCount(folder)}</span>
+            </button>
+          `).join("")}
+        </div>
+      </section>
 
       <div class="task-overview task-overview-v32">
         <article class="${focusCount ? "attention" : ""}">
@@ -424,7 +473,7 @@ export async function renderTasks(container) {
             activeFilter === "linked" ? "Tâches liées" :
             "Terminées"
           }</strong>
-          <span>${visible.length} tâche${visible.length > 1 ? "s" : ""}</span>
+          <span>${visible.length} tâche${visible.length > 1 ? "s" : ""}${activeFolder !== "all" ? ` · 📁 ${escapeHtml(activeFolder)}` : ""}</span>
         </div>
       </div>
 
@@ -442,7 +491,19 @@ export async function renderTasks(container) {
     </section>
   `;
 
-  container.querySelector("#add-task").addEventListener("click", () => showAddTaskModal());
+  container.querySelector("#add-task").addEventListener("click", () => showAddTaskModal(
+    activeFolder !== "all" ? { folder: activeFolder } : {}
+  ));
+
+  container.querySelectorAll("[data-task-folder]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      activeFolder = btn.dataset.taskFolder || "all";
+      await renderTasks(container);
+    });
+  });
+
+  container.querySelector("#task-add-folder")?.addEventListener("click", () => showTaskFolderCreateModal(container));
+  container.querySelector("#task-manage-folders")?.addEventListener("click", () => showTaskFolderManager(container));
 
   const searchInput = container.querySelector("#task-search");
   searchInput?.addEventListener("input", async event => {
@@ -472,6 +533,26 @@ export async function renderTasks(container) {
     objectiveContextId = null;
     linkedFilter = "all";
     await renderTasks(container);
+  });
+
+  container.querySelectorAll("[data-task-id]").forEach(row => {
+    row.addEventListener("click", event => {
+      if (event.target.closest("button, input, select, textarea, label, a")) return;
+
+      const task = tasks.find(item => item.id === row.dataset.taskId);
+      if (!task) return;
+
+      if (!isSystemTask(task)) {
+        // Le listener robuste de task_modal_guard intercepte ce bouton et ouvre la fiche.
+        row.querySelector(".task-edit")?.click();
+        return;
+      }
+
+      const route = systemTaskRoute(task);
+      if (route) {
+        window.dispatchEvent(new CustomEvent("myhub:navigate", { detail: route }));
+      }
+    });
   });
 
   container.querySelectorAll(".task-toggle").forEach(input => {
@@ -581,6 +662,8 @@ export async function renderTasks(container) {
         await skipSportPlanTask(task);
       } else if (task.source === "living-care") {
         await skipLivingCareTask(task);
+      } else if (task.source === "people-reminder") {
+        await dismissPeopleReminderTask(task);
       } else {
         await unlinkMilestoneTaskReference(task);
       }
@@ -596,13 +679,14 @@ export async function renderTasks(container) {
 
 export async function showAddTaskModal(preset = {}) {
   const editing = Boolean(preset?.id);
-  const [objectivesRaw, projectsRaw, assetsRaw, aquariumsRaw, plantsRaw, peopleRaw] = await Promise.all([
+  const [objectivesRaw, projectsRaw, assetsRaw, aquariumsRaw, plantsRaw, peopleRaw, taskFolders] = await Promise.all([
     safeGetAll("objectives"),
     safeGetAll("projects"),
     safeGetAll("maintenanceAssets"),
     safeGetAll("livingAquariums"),
     safeGetAll("livingPlants"),
-    safeGetAll("people")
+    safeGetAll("people"),
+    getTaskFolders()
   ]);
 
   const objectives = objectivesRaw
@@ -655,13 +739,12 @@ export async function showAddTaskModal(preset = {}) {
 
       <div class="field">
         <label for="task-folder">Dossier</label>
-        <input
-          id="task-folder"
-          name="folder"
-          maxlength="60"
-          value="${escapeHtml(preset.folder || "")}"
-          placeholder="Général, Maison, Travail…"
-        >
+        <select id="task-folder" name="folder">
+          ${[...new Set([DEFAULT_TASK_FOLDER, ...taskFolders, preset.folder].filter(Boolean))].map(folder => `
+            <option value="${escapeHtml(folder)}" ${sameTaskFolder(folder, preset.folder || DEFAULT_TASK_FOLDER) ? "selected" : ""}>📁 ${escapeHtml(folder)}</option>
+          `).join("")}
+        </select>
+        <small class="muted">Les dossiers se créent et se gèrent depuis l’écran Tâches.</small>
       </div>
 
       <div class="field">
@@ -797,6 +880,7 @@ export async function showAddTaskModal(preset = {}) {
         throw new Error("Le nom de la tâche est obligatoire.");
       }
 
+      task.folder = await ensureTaskFolder(task.folder);
       await putOne("tasks", task);
 
       closeModal();
