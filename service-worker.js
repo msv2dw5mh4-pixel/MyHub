@@ -1,4 +1,4 @@
-const CACHE = "myhub-v33-fiabilite-notifications";
+const CACHE = "myhub-v33-1-settings-version";
 
 const ASSETS = [
   "./",
@@ -25,6 +25,7 @@ const ASSETS = [
   "./css/notifications.css",
   "./js/app.js",
   "./js/core/db.js",
+  "./js/core/version.js",
   "./js/core/modules.js",
   "./js/core/ui.js",
   "./js/core/task_modal_guard.js",

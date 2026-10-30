@@ -1,3 +1,5 @@
+import { APP_VERSION } from "./version.js";
+
 const DB_NAME = "myhub";
 const DB_VERSION = 21;
 
@@ -157,7 +159,7 @@ export async function exportDatabase() {
   return {
     app: "MyHub",
     backupFormat: 2,
-    appVersion: "V31",
+    appVersion: APP_VERSION,
     dbVersion: DB_VERSION,
     exportedAt: new Date().toISOString(),
     totalItems,

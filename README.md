@@ -1,3 +1,9 @@
+# MyHub V33.1 — Version dans les Réglages
+
+Cette mise à jour ajoute une source unique de version (`js/core/version.js`) afin que le numéro affiché dans les Réglages et celui inscrit dans les sauvegardes restent cohérents.
+
+Dernier changement : ajout de l'encart « Version de MyHub », de la date de mise à jour, du résumé du dernier push et d'une fenêtre « Voir les nouveautés ».
+
 # MyHub V33 — Fiabilité & Notifications
 
 Version de consolidation basée sur l’audit de la sauvegarde réelle MyHub.

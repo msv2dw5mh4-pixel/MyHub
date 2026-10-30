@@ -1,4 +1,5 @@
 import { escapeHtml, openModal, closeModal } from "../core/ui.js";
+import { APP_VERSION, RELEASE_INFO } from "../core/version.js";
 import {
   prepareBackup,
   downloadBackupRaw,
@@ -158,6 +159,25 @@ export async function renderSettings(container) {
       </div>
 
       <div class="settings-list">
+
+        <article class="setting-card settings-version-card">
+          <div class="settings-version-head">
+            <div>
+              <span class="settings-version-eyebrow">VERSION DE MYHUB</span>
+              <strong>${escapeHtml(APP_VERSION)}</strong>
+            </div>
+            <span class="settings-version-badge">Version actuelle</span>
+          </div>
+
+          <div class="settings-release">
+            <span>Dernière mise à jour · ${escapeHtml(RELEASE_INFO.date)}</span>
+            <strong>${escapeHtml(RELEASE_INFO.title)}</strong>
+            <p>${escapeHtml(RELEASE_INFO.summary)}</p>
+          </div>
+
+          <button class="ghost-btn" id="settings-release-details">Voir les nouveautés</button>
+        </article>
+
         <article class="setting-card backup-main-card">
           <div class="backup-card-head">
             <div>
@@ -218,6 +238,40 @@ export async function renderSettings(container) {
       </div>
     </section>
   `;
+
+  container.querySelector("#settings-release-details")?.addEventListener("click", () => {
+    openModal(`
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">MYHUB ${escapeHtml(RELEASE_INFO.version)}</p>
+          <h2>Dernière mise à jour</h2>
+        </div>
+        <button class="icon-btn" id="release-modal-close">×</button>
+      </div>
+
+      <div class="release-modal-summary">
+        <span>${escapeHtml(RELEASE_INFO.date)}</span>
+        <strong>${escapeHtml(RELEASE_INFO.title)}</strong>
+        <p>${escapeHtml(RELEASE_INFO.summary)}</p>
+      </div>
+
+      <div class="release-modal-list">
+        ${RELEASE_INFO.details.map(detail => `
+          <div>
+            <span>✓</span>
+            <p>${escapeHtml(detail)}</p>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="actions">
+        <button class="primary-btn" id="release-modal-ok">Fermer</button>
+      </div>
+    `);
+
+    document.querySelector("#release-modal-close")?.addEventListener("click", closeModal);
+    document.querySelector("#release-modal-ok")?.addEventListener("click", closeModal);
+  });
 
   container.querySelector("#export-btn").addEventListener("click", async () => {
     const button = container.querySelector("#export-btn");
