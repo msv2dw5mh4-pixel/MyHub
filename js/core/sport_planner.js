@@ -543,7 +543,7 @@ function taskForSession(planSession, existing = null) {
   };
 }
 
-export async function syncSportPlanTasks() {
+export async function syncSportPlanTasks(horizonDays = 7) {
   const [plans, sessions, tasks] = await Promise.all([
     getAll("sportTrainingPlans"),
     getAll("sportPlanSessions"),
@@ -558,6 +558,9 @@ export async function syncSportPlanTasks() {
       .map(task => [task.sportPlanSessionId, task])
   );
 
+  const today = todayISO();
+  const horizon = addDays(today, horizonDays);
+
   for (const session of sessions) {
     if (!activePlanIds.has(session.planId)) continue;
 
@@ -568,7 +571,16 @@ export async function syncSportPlanTasks() {
       continue;
     }
 
-    await putOne("tasks", taskForSession(session, existing));
+    const shouldExist =
+      session.completed === true ||
+      !session.date ||
+      session.date <= horizon;
+
+    if (shouldExist) {
+      await putOne("tasks", taskForSession(session, existing));
+    } else if (existing && !existing.done) {
+      await deleteOne("tasks", existing.id);
+    }
   }
 
   for (const task of tasks.filter(task => task.source === "sport-plan")) {
@@ -728,8 +740,12 @@ async function markPlanSessionCompleted(planSession, actual = {}) {
     skipped: false,
     completedAt: new Date().toISOString(),
     activitySessionId: actual.activitySessionId || planSession.activitySessionId || null,
-    actualDistanceKm: Number(actual.distanceKm || 0),
-    actualDistanceMeters: Number(actual.distanceMeters || 0),
+    actualDistanceKm: Number(actual.distanceMeters || 0) > 0
+      ? Number(actual.distanceMeters) / 1000
+      : sessionDistanceKm(actual),
+    actualDistanceMeters: Number(actual.distanceMeters || 0) > 0
+      ? Number(actual.distanceMeters)
+      : sessionDistanceKm(actual) * 1000,
     actualTimeMinutes: Number(actual.duration || 0),
     actualWeight: Number(actual.weight || 0),
     actualReps: Number(actual.reps || 0),
@@ -788,9 +804,9 @@ export async function completeSportPlanFromActivity(activity, selectedGoalId = n
     if (match) {
       return markPlanSessionCompleted(match, {
         activitySessionId: activity.id,
-        distanceKm: activity.distanceKm,
-        distanceMeters: activity.distanceMeters,
-        duration: activity.duration
+        distanceKm: sessionDistanceKm(activity),
+        distanceMeters: Number(activity.distanceMeters || 0) || sessionDistanceKm(activity) * 1000,
+        duration: Number(activity.duration || activity.durationMin || 0)
       });
     }
   }

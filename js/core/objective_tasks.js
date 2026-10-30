@@ -76,7 +76,7 @@ function recurringTaskId(actionId, date) {
   return `task_action_${actionId}_${date}`;
 }
 
-export async function syncRecurringObjectiveTasks(horizonDays = 30) {
+export async function syncRecurringObjectiveTasks(horizonDays = 7) {
   const [objectives, actions, tasks] = await Promise.all([
     getAll("objectives"),
     getAll("objectiveActions"),
@@ -155,6 +155,52 @@ export async function syncRecurringObjectiveTasks(horizonDays = 30) {
 
     if (!valid) {
       await deleteOne("tasks", task.id);
+    }
+  }
+}
+
+
+export async function syncObjectiveProgressFromActions(objectiveId = null) {
+  const [objectives, actions, tasks, learningTopics] = await Promise.all([
+    getAll("objectives"),
+    getAll("objectiveActions"),
+    getAll("tasks"),
+    getAll("learningTopics")
+  ]);
+
+  for (const objective of objectives) {
+    if (objectiveId && objective.id !== objectiveId) continue;
+    if (objective.progressMode !== "numeric") continue;
+    if (!["h","heure","heures"].includes(String(objective.unit || "").trim().toLowerCase())) continue;
+
+    // Les objectifs déjà pilotés par le module Apprentissage restent sous son contrôle
+    // afin d'éviter tout double comptage.
+    if (learningTopics.some(topic => topic.objectiveId === objective.id && topic.syncObjective !== false)) continue;
+
+    const byId = new Map(
+      actions
+        .filter(action => action.objectiveId === objective.id && Number(action.durationMinutes || 0) > 0)
+        .map(action => [action.id, action])
+    );
+
+    if (!byId.size) continue;
+
+    const minutes = tasks
+      .filter(task =>
+        task.objectiveId === objective.id &&
+        task.source === "objective-recurring" &&
+        task.done === true &&
+        byId.has(task.objectiveActionId)
+      )
+      .reduce((sum, task) => sum + Number(byId.get(task.objectiveActionId)?.durationMinutes || 0), 0);
+
+    const hours = Math.round((minutes / 60) * 100) / 100;
+    if (Number(objective.currentValue || 0) !== hours) {
+      await putOne("objectives", {
+        ...objective,
+        currentValue: hours,
+        updatedAt: new Date().toISOString()
+      });
     }
   }
 }

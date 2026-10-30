@@ -9,6 +9,7 @@ export const moduleGroups = [
 export const modules = [
   { id: "tasks", name: "Tâches", icon: "✓", route: "tasks", enabled: true, group: "organiser", order: 10, description: "Actions concrètes, échéances, priorités et liens avec le reste de MyHub." },
   { id: "planning", name: "Planning", icon: "📅", route: "planning", enabled: true, group: "organiser", order: 20, description: "Agenda quotidien, semaine, mois et événements personnels." },
+  { id: "notifications", name: "Rappel MyHub", icon: "🔔", route: "notifications", enabled: true, group: "organiser", order: 25, description: "Choisir les jours et l’heure du rappel « C’est l’heure de compléter MyHub »." },
   { id: "objectives", name: "Objectifs", icon: "🎯", route: "objectives", enabled: true, group: "organiser", order: 30, description: "Objectifs, prochaines actions, jalons, échéances et progression." },
   { id: "projects", name: "Projets", icon: "🏠", route: "projects", enabled: true, group: "organiser", order: 40, description: "Gros projets regroupant tâches, budget, planning et documents." },
 

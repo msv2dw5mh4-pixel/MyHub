@@ -1,0 +1,15 @@
+.notification-module{display:grid;gap:13px}
+.notification-hero{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:17px;border-radius:22px;background:linear-gradient(135deg,#111827,#24382d);color:#fff}
+.notification-hero h2{margin:3px 0 6px;font-size:22px}.notification-hero p{margin:0;color:#d5dbe5;font-size:11px}
+.notification-switch{position:relative;display:block;width:50px;height:29px;flex:0 0 auto}
+.notification-switch input{position:absolute;opacity:0;pointer-events:none}
+.notification-switch span{position:absolute;inset:0;background:#687386;border-radius:999px;transition:.2s}
+.notification-switch span:after{content:"";position:absolute;width:23px;height:23px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.notification-switch input:checked+span{background:#39a85a}.notification-switch input:checked+span:after{transform:translateX(21px)}
+.notification-card{display:grid;gap:12px;padding:14px;border:1px solid var(--border);border-radius:19px;background:var(--surface)}
+.notification-card h3{margin:0;font-size:14px}.notification-status{display:flex;align-items:center;justify-content:space-between;gap:10px}.notification-status>div{display:grid;gap:3px}.notification-status span{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:900}.notification-status strong{font-size:12px}
+.notification-time-field input{font-size:22px;font-weight:800;max-width:180px}
+.notification-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.notification-days label{display:grid;place-items:center;padding:9px 3px;border:1px solid var(--border);border-radius:11px;background:var(--surface-soft);font-size:9px;font-weight:850;color:var(--muted)}.notification-days input{display:none}.notification-days label.active{background:var(--text);border-color:var(--text);color:var(--surface)}
+.notification-actions-inline{display:grid;grid-template-columns:1fr 1fr;gap:8px}.notification-test-btn{width:100%;border:0;border-radius:14px;padding:13px;background:var(--text);color:var(--surface);font-weight:900}
+.notification-message-preview{margin:6px 0 0;color:var(--muted);font-size:12px}.notification-info{padding:12px;border-radius:16px;background:var(--surface-soft);display:grid;gap:5px}.notification-info strong{font-size:11px}.notification-info p{margin:0;color:var(--muted);font-size:10px;line-height:1.45}
+@media(max-width:420px){.notification-hero h2{font-size:18px}.notification-days{gap:3px}.notification-days label{padding:8px 1px;font-size:8px}}

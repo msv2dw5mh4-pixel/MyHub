@@ -1,4 +1,4 @@
-const CACHE = "myhub-v32-organisation-tasks-objectives";
+const CACHE = "myhub-v33-fiabilite-notifications";
 
 const ASSETS = [
   "./",
@@ -22,6 +22,7 @@ const ASSETS = [
   "./css/people.css",
   "./css/meals.css",
   "./css/rental.css",
+  "./css/notifications.css",
   "./js/app.js",
   "./js/core/db.js",
   "./js/core/modules.js",
@@ -34,6 +35,7 @@ const ASSETS = [
   "./js/core/sport_planner.js",
   "./js/core/sport_insights.js",
   "./js/core/sport_catalog.js",
+  "./js/core/integrity.js",
   "./js/core/tracker_automation.js",
   "./js/core/living_tasks.js",
   "./js/core/backup.js",
@@ -61,6 +63,7 @@ const ASSETS = [
   "./js/modules/meals.js",
   "./js/modules/shopping.js",
   "./js/modules/rental.js",
+  "./js/modules/notifications.js",
   "./manifest.webmanifest",
   "./assets/icons/icon-192.svg",
   "./assets/icons/icon-512.svg"
@@ -99,5 +102,44 @@ self.addEventListener("fetch", event => {
           cached || caches.match("./index.html")
         )
       )
+  );
+});
+
+
+self.addEventListener("push", event => {
+  let payload = {
+    title: "MyHub",
+    body: "C’est l’heure de compléter MyHub"
+  };
+
+  try {
+    if (event.data) {
+      const incoming = event.data.json();
+      payload = { ...payload, ...incoming };
+    }
+  } catch {}
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || "MyHub", {
+      body: payload.body || "C’est l’heure de compléter MyHub",
+      icon: "./assets/icons/icon-192.png",
+      badge: "./assets/icons/icon-192.png",
+      tag: payload.tag || "myhub-reminder",
+      data: payload.data || { route: "dashboard" }
+    })
+  );
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if ("focus" in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow("./");
+      return null;
+    })
   );
 });

@@ -12,7 +12,7 @@ let selectedDate = todayISO();
 let statsPeriod = 30;
 let heatmapMonth = todayISO().slice(0,7);
 let lastContainer = null;
-let todayFilter = "all";
+let todayFilter = "essential";
 
 const DAYS = [
   { id: 1, short: "Lun", name: "Lundi" },
@@ -412,6 +412,16 @@ async function renderHistory(shell) {
 
   shell.innerHTML = `
     ${tabs("history")}
+    ${cleanup.length ? `
+      <div class="tracker-settings-card tracker-cleanup-card">
+        <strong>🧹 Nettoyage recommandé</strong>
+        <p>${cleanup.length} ligne${cleanup.length > 1 ? "s" : ""} semble${cleanup.length > 1 ? "nt" : ""} peu utile actuellement. Rien n’est supprimé automatiquement.</p>
+        <div class="tracker-cleanup-list">
+          ${cleanup.slice(0,6).map(row => `<span>${escapeHtml(row.item.name)} <small>· ${row.reason}</small></span>`).join("")}
+        </div>
+      </div>
+    ` : ""}
+
     <div class="section">
       <div class="section-head"><div><h2>Historique</h2><p class="muted" style="margin:4px 0 0">${dates.length} journée${dates.length>1?"s":""} enregistrée${dates.length>1?"s":""}</p></div></div>
       <div class="tracker-history-list">
@@ -617,8 +627,30 @@ async function renderStats(shell) {
   }));
 }
 
+function trackerCleanupCandidates(items, entries) {
+  const threshold = shiftDate(todayISO(), -30);
+
+  return items.map(item => {
+    const rows = entries.filter(entry => entry.itemId === item.id && entry.date >= threshold);
+    const positive = rows.filter(entry => {
+      if (item.type === "habit") return entry.value === "yes";
+      return entry.value !== "" && entry.value !== null && entry.value !== undefined && entry.value !== "na";
+    }).length;
+
+    return {
+      item,
+      entries: rows.length,
+      positive,
+      reason: rows.length === 0
+        ? "aucune saisie sur 30 jours"
+        : (item.type === "habit" && rows.length >= 5 && positive === 0 ? "jamais validée sur 30 jours" : "")
+    };
+  }).filter(row => row.reason);
+}
+
 async function renderSettings(shell) {
   const data=await getTrackerData();
+  const cleanup = trackerCleanupCandidates(data.items, data.entries);
 
   shell.innerHTML=`
     ${tabs("settings")}

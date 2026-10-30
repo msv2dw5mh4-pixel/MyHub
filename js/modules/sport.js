@@ -734,6 +734,12 @@ function isGoalOnTrack(goal, current, expected) {
     : current >= expected;
 }
 
+function workoutAgeHours(session) {
+  const started = new Date(session?.startedAt || session?.createdAt || 0).getTime();
+  if (!started) return 0;
+  return Math.max(0, (Date.now() - started) / 3600000);
+}
+
 async function renderToday(shell) {
   const data = await getSportData();
   const [summary, trainingLoad] = await Promise.all([
@@ -741,6 +747,7 @@ async function renderToday(shell) {
     getWeeklyTrainingLoad()
   ]);
   const inProgress = data.sessions.find(s => s.status === "in_progress") || null;
+  const staleWorkout = inProgress && workoutAgeHours(inProgress) >= 12;
   const recent = completedSessions(data.sessions).slice(0, 3);
 
   shell.innerHTML = `
@@ -773,9 +780,12 @@ async function renderToday(shell) {
         ? `
           <section class="sport-section">
             <div class="sport-card">
-              <strong>Séance en cours</strong>
-              <p class="muted" style="margin:5px 0 12px">${escapeHtml(sessionLabel(inProgress))} · ${formatDateLong(inProgress.date)}</p>
-              <button class="primary-btn" id="sport-resume-workout">Reprendre la séance</button>
+              <strong>${staleWorkout ? "⚠️ Séance restée ouverte" : "Séance en cours"}</strong>
+              <p class="muted" style="margin:5px 0 12px">${escapeHtml(sessionLabel(inProgress))} · ${formatDateLong(inProgress.date)}${staleWorkout ? ` · ouverte depuis ${Math.floor(workoutAgeHours(inProgress))} h` : ""}</p>
+              <div class="sport-stale-actions">
+                <button class="primary-btn" id="sport-resume-workout">Reprendre la séance</button>
+                ${staleWorkout ? `<button class="danger-btn" id="sport-delete-stale-workout">Supprimer</button>` : ""}
+              </div>
             </div>
           </section>
         `
@@ -836,6 +846,15 @@ async function renderToday(shell) {
       await renderCurrentView();
     });
   }
+
+  shell.querySelector("#sport-delete-stale-workout")?.addEventListener("click", async () => {
+    if (!confirm("Supprimer cette ancienne séance restée ouverte ? Les séries associées seront supprimées.")) return;
+    const sets = (await getAll("sportSets")).filter(set => set.sessionId === inProgress.id);
+    for (const set of sets) await deleteOne("sportSets", set.id);
+    await deleteOne("sportSessions", inProgress.id);
+    window.dispatchEvent(new CustomEvent("myhub:data-changed"));
+    await renderToday(shell);
+  });
 
   bindHistoryRows(shell);
 }

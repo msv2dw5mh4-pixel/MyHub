@@ -400,6 +400,14 @@ async function showProjectModal(projectId = null, preset = {}) {
     event.preventDefault();
     const fd = new FormData(event.target);
     const status = String(fd.get("status") || "active");
+    const startDate = String(fd.get("startDate") || todayISO());
+    const targetDate = String(fd.get("targetDate") || "");
+
+    if (targetDate && targetDate < startDate) {
+      alert("L’échéance du projet doit être postérieure à sa date de départ.");
+      return;
+    }
+
     const saved = {
       ...(project || {}),
       id: project?.id || uid("project"),
@@ -408,8 +416,8 @@ async function showProjectModal(projectId = null, preset = {}) {
       description: String(fd.get("description") || "").trim(),
       status,
       manualProgress: status === "completed" ? 100 : Math.max(0, Math.min(100, Number(fd.get("manualProgress") || 0))),
-      startDate: String(fd.get("startDate") || todayISO()),
-      targetDate: String(fd.get("targetDate") || ""),
+      startDate,
+      targetDate,
       budgetTarget: Number(fd.get("budgetTarget") || 0),
       active: true,
       createdAt: project?.createdAt || new Date().toISOString(),

@@ -36,7 +36,7 @@ let lastContainer = null;
 export async function renderObjectives(container) {
   lastContainer = container;
   container.innerHTML = `<section class="objectives-shell" id="objectives-shell"></section>`;
-  await syncRecurringObjectiveTasks(30);
+  await syncRecurringObjectiveTasks(7);
   await renderCurrentView();
 }
 
@@ -821,7 +821,7 @@ async function renderDetail(shell, objectiveId) {
         updatedAt: new Date().toISOString()
       });
 
-      await syncRecurringObjectiveTasks(30);
+      await syncRecurringObjectiveTasks(7);
 
       window.dispatchEvent(new CustomEvent("myhub:data-changed"));
       await renderDetail(shell, objective.id);
@@ -1084,6 +1084,13 @@ async function showObjectiveModal(objectiveId = null, preset = {}) {
     const fd = new FormData(event.target);
     const progressMode = String(fd.get("progressMode"));
     const status = String(fd.get("status") || "active");
+    const startDate = String(fd.get("startDate") || todayISO());
+    const targetDate = String(fd.get("targetDate") || "");
+
+    if (targetDate && targetDate < startDate) {
+      alert("L’échéance doit être postérieure à la date de départ.");
+      return;
+    }
 
     const saved = {
       ...(objective || {}),
@@ -1093,8 +1100,8 @@ async function showObjectiveModal(objectiveId = null, preset = {}) {
       description: String(fd.get("description") || "").trim(),
       priority: String(fd.get("priority") || "medium"),
       status,
-      startDate: String(fd.get("startDate") || todayISO()),
-      targetDate: String(fd.get("targetDate") || ""),
+      startDate,
+      targetDate,
       projectId: String(fd.get("projectId") || "") || null,
       progressMode,
       manualProgress: clamp(fd.get("manualProgress") || 0),
@@ -1120,7 +1127,7 @@ async function showObjectiveModal(objectiveId = null, preset = {}) {
     }
 
     if (saved.status === "active") {
-      await syncRecurringObjectiveTasks(30);
+      await syncRecurringObjectiveTasks(7);
     } else {
       await deleteFutureObjectiveActionTasks(saved.id);
     }
@@ -1282,7 +1289,7 @@ async function showActionModal(objectiveId, actionId = null) {
 
     <form class="form-grid" id="objective-action-form">
       <div class="objective-form-note">
-        Les tâches sont générées localement sur 30 jours glissants. À chaque ouverture de MyHub, les prochaines occurrences sont préparées automatiquement.
+        MyHub ne prépare que les 7 prochains jours pour éviter d’encombrer Tâches. Les occurrences suivantes apparaîtront automatiquement au fil du temps.
       </div>
 
       <div class="field">
@@ -1384,6 +1391,12 @@ async function showActionModal(objectiveId, actionId = null) {
       </div>
 
       <div class="field">
+        <label>Durée estimée (min)</label>
+        <input type="number" name="durationMinutes" min="0" step="5" value="${action?.durationMinutes ?? ""}" placeholder="Ex : 30">
+        <small class="muted">Si l’objectif est chiffré en heures, cette durée permet de faire progresser automatiquement l’objectif quand l’action est terminée.</small>
+      </div>
+
+      <div class="field">
         <label>Heure de rappel (optionnel)</label>
         <input
           type="time"
@@ -1447,13 +1460,14 @@ async function showActionModal(objectiveId, actionId = null) {
       startDate,
       endDate,
       reminderTime: String(fd.get("reminderTime") || ""),
+      durationMinutes: Math.max(0, Number(fd.get("durationMinutes") || 0)),
       active: true,
       createdAt: action?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
     await putOne("objectiveActions", savedAction);
-    await syncRecurringObjectiveTasks(30);
+    await syncRecurringObjectiveTasks(7);
 
     closeModal();
     window.dispatchEvent(new CustomEvent("myhub:data-changed"));

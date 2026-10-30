@@ -54,6 +54,18 @@ function taskState(task) {
   return "upcoming";
 }
 
+function isAutomaticTask(task) {
+  return Boolean(task.generated) || [
+    "maintenance",
+    "document",
+    "sport-plan",
+    "living-care",
+    "objective-recurring",
+    "objective-milestone",
+    "people-reminder"
+  ].includes(task.source);
+}
+
 function hasTaskLink(task) {
   return Boolean(
     task.objectiveId ||
@@ -97,13 +109,18 @@ function filterTasks(tasks) {
     case "upcoming":
       filtered = tasks.filter(task =>
         !task.done &&
+        !isAutomaticTask(task) &&
         Boolean(task.dueDate) &&
         task.dueDate > today
       );
       break;
 
     case "no-date":
-      filtered = tasks.filter(task => !task.done && !task.dueDate);
+      filtered = tasks.filter(task => !task.done && !isAutomaticTask(task) && !task.dueDate);
+      break;
+
+    case "automatic":
+      filtered = tasks.filter(task => !task.done && isAutomaticTask(task));
       break;
 
     case "linked":
@@ -284,7 +301,7 @@ function taskRow(task, objectiveMap, projectMap, assetMap, aquariumMap, plantMap
 }
 
 export async function renderTasks(container) {
-  await syncRecurringObjectiveTasks(30);
+  await syncRecurringObjectiveTasks(7);
   await syncDocumentTasks();
   await syncSportPlanTasks();
   await syncLivingCareTasks();
@@ -311,8 +328,9 @@ export async function renderTasks(container) {
 
   const today = todayISO();
   const focusCount = tasks.filter(task => !task.done && task.dueDate && task.dueDate <= today).length;
-  const upcomingCount = tasks.filter(task => !task.done && task.dueDate && task.dueDate > today).length;
-  const inboxCount = tasks.filter(task => !task.done && !task.dueDate).length;
+  const upcomingCount = tasks.filter(task => !task.done && !isAutomaticTask(task) && task.dueDate && task.dueDate > today).length;
+  const inboxCount = tasks.filter(task => !task.done && !isAutomaticTask(task) && !task.dueDate).length;
+  const automaticCount = tasks.filter(task => !task.done && isAutomaticTask(task)).length;
   const linkedCount = tasks.filter(task => !task.done && hasTaskLink(task)).length;
   const doneCount = tasks.filter(task => task.done).length;
   const contextObjective = objectiveContextId ? objectiveMap.get(objectiveContextId) : null;
@@ -358,6 +376,9 @@ export async function renderTasks(container) {
         <button class="${activeFilter === "no-date" ? "active" : ""}" data-filter="no-date">
           Sans date <span>${inboxCount}</span>
         </button>
+        <button class="${activeFilter === "automatic" ? "active" : ""}" data-filter="automatic">
+          Automatiques <span>${automaticCount}</span>
+        </button>
         <button class="${activeFilter === "linked" ? "active" : ""}" data-filter="linked">
           Liées <span>${linkedCount}</span>
         </button>
@@ -399,6 +420,7 @@ export async function renderTasks(container) {
             activeFilter === "focus" ? "À traiter maintenant" :
             activeFilter === "upcoming" ? "À venir" :
             activeFilter === "no-date" ? "Sans échéance" :
+            activeFilter === "automatic" ? "Tâches automatiques" :
             activeFilter === "linked" ? "Tâches liées" :
             "Terminées"
           }</strong>
@@ -497,6 +519,7 @@ export async function renderTasks(container) {
 
       await putOne("tasks", updated);
       await syncMilestoneFromTask(updated);
+      if (updated.objectiveId) await syncObjectiveProgressFromActions(updated.objectiveId);
 
       await renderTasks(container);
 
@@ -803,7 +826,7 @@ export function requestTasksForObjective(objectiveId) {
 }
 
 export function requestTaskView(view = "focus") {
-  activeFilter = ["focus","upcoming","no-date","linked","done"].includes(view) ? view : "focus";
+  activeFilter = ["focus","upcoming","no-date","automatic","linked","done"].includes(view) ? view : "focus";
   if (activeFilter !== "linked") objectiveContextId = null;
   taskSearch = "";
   window.dispatchEvent(new CustomEvent("myhub:navigate", { detail: "tasks" }));

@@ -1,3 +1,22 @@
+# MyHub V33 — Fiabilité & Notifications
+
+Version de consolidation basée sur l’audit de la sauvegarde réelle MyHub.
+
+## Changements
+- nouveau module 🔔 Rappel MyHub : activation, heure, jours, tous les jours et bouton de test ;
+- socle Service Worker prêt pour un futur Web Push ;
+- réparation automatique des dates incohérentes Objectifs / Projets ;
+- normalisation des distances Sport et nettoyage de références cassées ;
+- détection des séances de musculation restées ouvertes plus de 12 h ;
+- tâches récurrentes Objectifs et Sport générées seulement à 7 jours ;
+- nouvelle vue Tâches « Automatiques » et séparation des tâches personnelles à venir ;
+- actions récurrentes Objectifs avec durée estimée pour alimenter automatiquement les objectifs en heures lorsqu’ils ne sont pas déjà pilotés par Apprentissage ;
+- Tracker ouvert par défaut sur ⭐ Essentiel et audit des lignes peu utilisées ;
+- Repas ouvre désormais directement la Bibliothèque.
+
+### Notifications iPhone
+Le bouton de test utilise une vraie notification système. Le rappel horaire local fonctionne lorsque MyHub reste actif/en arrière-plan. Pour garantir un déclenchement avec l’app complètement fermée, un petit backend Web Push reste nécessaire ; le Service Worker V33 contient déjà les handlers `push` et `notificationclick`.
+
 # MyHub V32 — Organisation, Tâches & Objectifs
 
 Cette version remet de l'ordre dans la page Modules et consolide le lien Objectif → Tâches.

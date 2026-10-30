@@ -362,3 +362,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   .task-overview-v32 article{padding:9px}
   .task-context-banner{align-items:flex-start;flex-direction:column}
 }
+
+
+/* MyHub V33 — fiabilité et simplification */
+.task-primary-tabs button[data-filter="automatic"]{border-style:dashed}
+.tracker-cleanup-card{border-color:#ead8a4;background:#fffaf0}
+.tracker-cleanup-list{display:grid;gap:5px;margin-top:8px}
+.tracker-cleanup-list span{font-size:10px;font-weight:750}
+.tracker-cleanup-list small{color:var(--muted);font-weight:500}

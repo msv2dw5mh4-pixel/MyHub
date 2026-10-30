@@ -18,6 +18,7 @@ import { renderPeople, requestNewPerson } from "./modules/people.js";
 import { renderMeals, requestNewMeal, ensureMealsSeeded } from "./modules/meals.js";
 import { renderShopping, requestNewShoppingItem } from "./modules/shopping.js";
 import { renderRental, requestNewRentalBooking } from "./modules/rental.js";
+import { renderNotifications, startMyHubReminderScheduler, clearMyHubBadge } from "./modules/notifications.js";
 import { renderModules } from "./modules/modules.js";
 import { renderSettings } from "./modules/settings.js";
 import { renderSearch } from "./modules/search.js";
@@ -29,6 +30,7 @@ import { syncLearningObjective } from "./core/learning_sync.js";
 import { syncSportPlanTasks } from "./core/sport_planner.js";
 import { syncLivingCareTasks } from "./core/living_tasks.js";
 import { syncPeopleReminderTasks } from "./core/people_tasks.js";
+import { runDataIntegrityRepair } from "./core/integrity.js";
 
 const view = document.getElementById("view");
 const pageTitle = document.getElementById("page-title");
@@ -48,6 +50,7 @@ const routes = {
   meals: { title: "Repas", render: renderMeals },
   shopping: { title: "Courses", render: renderShopping },
   rental: { title: "Location", render: renderRental },
+  notifications: { title: "Rappel MyHub", render: renderNotifications },
   tasks: { title: "Tâches", render: renderTasks },
   stock: { title: "Stock", render: renderStock },
   tracker: { title: "Tracker", render: renderTracker },
@@ -275,7 +278,10 @@ if ("serviceWorker" in navigator) {
 
 (async () => {
   try {
-    await syncRecurringObjectiveTasks(30);
+    await clearMyHubBadge();
+    await runDataIntegrityRepair();
+    startMyHubReminderScheduler();
+    await syncRecurringObjectiveTasks(7);
     await syncMaintenanceTasks();
     await syncDocumentTasks();
     await syncLearningObjective();

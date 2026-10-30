@@ -1136,3 +1136,5 @@
   .sport-live-toolbar .primary-btn{width:100%}
   .sport-secondary-action,.sport-danger-action{flex:1}
 }
+
+.sport-stale-actions{display:flex;gap:8px;flex-wrap:wrap}

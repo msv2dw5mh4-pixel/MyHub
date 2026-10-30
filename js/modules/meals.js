@@ -2,7 +2,7 @@ import { getAll, getOne, putOne, deleteOne } from "../core/db.js";
 import { DEFAULT_MEALS } from "../core/meal_seed.js";
 import { escapeHtml, openModal, closeModal, uid, todayISO } from "../core/ui.js";
 
-let currentTab = "week";
+let currentTab = "library";
 let weekOffset = 0;
 let libraryFilter = "Tous";
 let libraryQuery = "";
