@@ -29,7 +29,9 @@ import { skipSportPlanTask, syncSportPlanTasks } from "../core/sport_planner.js"
 import { completeLivingCareTask, syncLivingCareTasks, skipLivingCareTask } from "../core/living_tasks.js";
 import { dismissPeopleReminderTask, syncPeopleReminderTasks } from "../core/people_tasks.js";
 
-let activeFilter = "today";
+let activeFilter = "focus";
+let linkedFilter = "all";
+let objectiveContextId = null;
 let taskSearch = "";
 
 async function safeGetAll(storeName) {
@@ -52,64 +54,68 @@ function taskState(task) {
   return "upcoming";
 }
 
+function hasTaskLink(task) {
+  return Boolean(
+    task.objectiveId ||
+    task.projectId ||
+    task.assetId ||
+    task.maintenanceAssetId ||
+    task.personId ||
+    task.livingEntityId ||
+    ["maintenance","document","sport-plan","living-care","objective-recurring","objective-milestone","people-reminder"].includes(task.source)
+  );
+}
+
+function linkedFilterMatches(task) {
+  if (objectiveContextId && task.objectiveId !== objectiveContextId) return false;
+
+  if (linkedFilter === "all") return hasTaskLink(task);
+  if (linkedFilter === "objectives") return Boolean(task.objectiveId);
+  if (linkedFilter === "projects") return Boolean(task.projectId);
+  if (linkedFilter === "maintenance") return task.source === "maintenance" || Boolean(task.assetId || task.maintenanceAssetId);
+  if (linkedFilter === "sport") return task.source === "sport-plan";
+  if (linkedFilter === "living") return task.source === "living-care" || Boolean(task.livingEntityId);
+  if (linkedFilter === "people") return task.source === "people-reminder" || Boolean(task.personId);
+  if (linkedFilter === "documents") return task.source === "document";
+
+  return true;
+}
+
 function filterTasks(tasks) {
   const today = todayISO();
-  const tomorrow = (() => {
-    const d = new Date(`${today}T12:00:00`);
-    d.setDate(d.getDate() + 1);
-    const offset = d.getTimezoneOffset();
-    return new Date(d.getTime() - offset * 60000).toISOString().slice(0,10);
-  })();
-  const weekEnd = (() => {
-    const d = new Date(`${today}T12:00:00`);
-    d.setDate(d.getDate() + 7);
-    const offset = d.getTimezoneOffset();
-    return new Date(d.getTime() - offset * 60000).toISOString().slice(0,10);
-  })();
 
   let filtered;
   switch (activeFilter) {
-    case "today":
-      filtered = tasks.filter(t => !t.done && (!t.dueDate || t.dueDate <= today));
+    case "focus":
+      filtered = tasks.filter(task =>
+        !task.done &&
+        Boolean(task.dueDate) &&
+        task.dueDate <= today
+      );
       break;
-    case "tomorrow":
-      filtered = tasks.filter(t => !t.done && t.dueDate === tomorrow);
+
+    case "upcoming":
+      filtered = tasks.filter(task =>
+        !task.done &&
+        Boolean(task.dueDate) &&
+        task.dueDate > today
+      );
       break;
-    case "week":
-      filtered = tasks.filter(t => !t.done && t.dueDate && t.dueDate > today && t.dueDate <= weekEnd);
-      break;
-    case "late":
-      filtered = tasks.filter(t => !t.done && t.dueDate && t.dueDate < today);
-      break;
+
     case "no-date":
-      filtered = tasks.filter(t => !t.done && !t.dueDate);
+      filtered = tasks.filter(task => !task.done && !task.dueDate);
       break;
-    case "all":
-      filtered = tasks.filter(t => !t.done);
+
+    case "linked":
+      filtered = tasks.filter(task => !task.done && linkedFilterMatches(task));
       break;
-    case "objectives":
-      filtered = tasks.filter(t => !t.done && t.objectiveId);
-      break;
-    case "maintenance":
-      filtered = tasks.filter(t => !t.done && (t.source === "maintenance" || t.assetId || t.maintenanceAssetId));
-      break;
-    case "projects":
-      filtered = tasks.filter(t => !t.done && t.projectId);
-      break;
-    case "sport-plan":
-      filtered = tasks.filter(t => !t.done && t.source === "sport-plan");
-      break;
-    case "living":
-      filtered = tasks.filter(t => !t.done && (t.source === "living-care" || t.livingEntityId));
-      break;
-    case "people":
-      filtered = tasks.filter(t => !t.done && (t.source === "people-reminder" || t.personId));
-      break;
+
     case "done":
-      filtered = tasks.filter(t => t.done);
+      filtered = tasks.filter(task => task.done);
       break;
+
     default:
-      filtered = tasks;
+      filtered = tasks.filter(task => !task.done);
   }
 
   const query = taskSearch.trim().toLocaleLowerCase("fr-FR");
@@ -123,8 +129,14 @@ function filterTasks(tasks) {
 }
 
 function sortTasks(tasks) {
+  const priorityRank = { high: 0, medium: 1, low: 2 };
+
   return [...tasks].sort((a,b) => {
     if (a.done !== b.done) return Number(a.done) - Number(b.done);
+
+    const ap = priorityRank[a.priority || "medium"] ?? 1;
+    const bp = priorityRank[b.priority || "medium"] ?? 1;
+    if (ap !== bp) return ap - bp;
 
     const ad = a.dueDate || "9999-12-31";
     const bd = b.dueDate || "9999-12-31";
@@ -173,6 +185,13 @@ function personBadge(task, peopleMap) {
   return `<span class="badge">👤 ${escapeHtml(label)}</span>`;
 }
 
+function priorityBadge(task) {
+  const priority = task.priority || "medium";
+  if (priority === "high") return `<span class="badge task-priority high">Priorité haute</span>`;
+  if (priority === "low") return `<span class="badge task-priority low">Priorité basse</span>`;
+  return "";
+}
+
 function sourceBadge(task) {
   if (task.source === "objective-milestone") {
     return `<span class="badge">Jalon lié</span>`;
@@ -214,10 +233,11 @@ function isSystemTask(task) {
 }
 
 function taskDateAction(task) {
-  if (task.done || isSystemTask(task)) return "";
+  if (isSystemTask(task)) return "";
+
   return `<div class="task-quick-actions">
     <button class="task-mini-btn task-edit" type="button">Modifier</button>
-    <button class="task-mini-btn task-move-tomorrow" type="button">Demain</button>
+    ${task.done ? "" : `<button class="task-mini-btn task-move-tomorrow" type="button">Demain</button>`}
   </div>`;
 }
 
@@ -238,6 +258,7 @@ function taskRow(task, objectiveMap, projectMap, assetMap, aquariumMap, plantMap
     assetBadge(task, assetMap),
     livingBadge(task, aquariumMap, plantMap),
     personBadge(task, peopleMap),
+    priorityBadge(task),
     sourceBadge(task)
   ].filter(Boolean).join(" ");
 
@@ -288,51 +309,112 @@ export async function renderTasks(container) {
   const peopleMap = new Map(people.map(p => [p.id, p]));
   const visible = filterTasks(tasks);
 
+  const today = todayISO();
+  const focusCount = tasks.filter(task => !task.done && task.dueDate && task.dueDate <= today).length;
+  const upcomingCount = tasks.filter(task => !task.done && task.dueDate && task.dueDate > today).length;
+  const inboxCount = tasks.filter(task => !task.done && !task.dueDate).length;
+  const linkedCount = tasks.filter(task => !task.done && hasTaskLink(task)).length;
+  const doneCount = tasks.filter(task => task.done).length;
+  const contextObjective = objectiveContextId ? objectiveMap.get(objectiveContextId) : null;
+
   container.innerHTML = `
-    <section>
+    <section class="tasks-v32">
       <div class="section-head">
         <div>
           <h2>Mes tâches</h2>
           <p class="muted" style="margin:4px 0 0">
-            ${tasks.filter(t => !t.done).length} en cours ·
-            ${tasks.filter(t => !t.done && (t.assetId || t.maintenanceAssetId)).length} liée${tasks.filter(t => !t.done && (t.assetId || t.maintenanceAssetId)).length > 1 ? "s" : ""} à des biens
+            ${tasks.filter(task => !task.done).length} à faire · ${focusCount} à traiter maintenant
           </p>
         </div>
 
-        <button class="primary-btn" id="add-task">Ajouter</button>
+        <button class="primary-btn" id="add-task">+ Tâche</button>
       </div>
 
-      <div class="task-overview">
-        <article><span>En retard</span><strong>${tasks.filter(t=>!t.done&&t.dueDate&&t.dueDate<todayISO()).length}</strong></article>
-        <article><span>Aujourd'hui</span><strong>${tasks.filter(t=>!t.done&&t.dueDate===todayISO()).length}</strong></article>
-        <article><span>Sans date</span><strong>${tasks.filter(t=>!t.done&&!t.dueDate).length}</strong></article>
+      <div class="task-overview task-overview-v32">
+        <article class="${focusCount ? "attention" : ""}">
+          <span>À traiter</span>
+          <strong>${focusCount}</strong>
+          <small>retard + aujourd'hui</small>
+        </article>
+        <article>
+          <span>À venir</span>
+          <strong>${upcomingCount}</strong>
+          <small>avec une date future</small>
+        </article>
+        <article>
+          <span>Inbox</span>
+          <strong>${inboxCount}</strong>
+          <small>sans échéance</small>
+        </article>
       </div>
+
+      <nav class="task-primary-tabs" aria-label="Vues des tâches">
+        <button class="${activeFilter === "focus" ? "active" : ""}" data-filter="focus">
+          À traiter <span>${focusCount}</span>
+        </button>
+        <button class="${activeFilter === "upcoming" ? "active" : ""}" data-filter="upcoming">
+          À venir <span>${upcomingCount}</span>
+        </button>
+        <button class="${activeFilter === "no-date" ? "active" : ""}" data-filter="no-date">
+          Sans date <span>${inboxCount}</span>
+        </button>
+        <button class="${activeFilter === "linked" ? "active" : ""}" data-filter="linked">
+          Liées <span>${linkedCount}</span>
+        </button>
+        <button class="${activeFilter === "done" ? "active" : ""}" data-filter="done">
+          Terminées <span>${doneCount}</span>
+        </button>
+      </nav>
+
+      ${activeFilter === "linked" ? `
+        <div class="task-linked-filters">
+          <button class="${linkedFilter === "all" ? "active" : ""}" data-linked-filter="all">Toutes</button>
+          <button class="${linkedFilter === "objectives" ? "active" : ""}" data-linked-filter="objectives">🎯 Objectifs</button>
+          <button class="${linkedFilter === "projects" ? "active" : ""}" data-linked-filter="projects">🏠 Projets</button>
+          <button class="${linkedFilter === "maintenance" ? "active" : ""}" data-linked-filter="maintenance">🔧 Entretien</button>
+          <button class="${linkedFilter === "sport" ? "active" : ""}" data-linked-filter="sport">🏅 Sport</button>
+          <button class="${linkedFilter === "documents" ? "active" : ""}" data-linked-filter="documents">📂 Documents</button>
+          <button class="${linkedFilter === "living" ? "active" : ""}" data-linked-filter="living">🌿 Vivant</button>
+          <button class="${linkedFilter === "people" ? "active" : ""}" data-linked-filter="people">👥 Personnes</button>
+        </div>
+      ` : ""}
+
+      ${contextObjective ? `
+        <div class="task-context-banner">
+          <div>
+            <span>Filtre objectif</span>
+            <strong>🎯 ${escapeHtml(contextObjective.title)}</strong>
+          </div>
+          <button class="ghost-btn" id="task-clear-context">Voir toutes les tâches liées</button>
+        </div>
+      ` : ""}
 
       <div class="task-search-wrap">
-        <input id="task-search" type="search" value="${escapeHtml(taskSearch)}" placeholder="Rechercher une tâche…">
+        <input id="task-search" type="search" value="${escapeHtml(taskSearch)}" placeholder="Rechercher dans cette vue…" autocomplete="off">
       </div>
 
-      <div class="pills" id="task-filters">
-        <button class="pill ${activeFilter === "today" ? "active" : ""}" data-filter="today">Aujourd'hui</button>
-        <button class="pill ${activeFilter === "tomorrow" ? "active" : ""}" data-filter="tomorrow">Demain</button>
-        <button class="pill ${activeFilter === "week" ? "active" : ""}" data-filter="week">7 jours</button>
-        <button class="pill ${activeFilter === "late" ? "active" : ""}" data-filter="late">En retard</button>
-        <button class="pill ${activeFilter === "no-date" ? "active" : ""}" data-filter="no-date">Sans date</button>
-        <button class="pill ${activeFilter === "all" ? "active" : ""}" data-filter="all">Toutes</button>
-        <button class="pill ${activeFilter === "objectives" ? "active" : ""}" data-filter="objectives">🎯 Objectifs</button>
-        <button class="pill ${activeFilter === "maintenance" ? "active" : ""}" data-filter="maintenance">🔧 Entretien</button>
-        <button class="pill ${activeFilter === "projects" ? "active" : ""}" data-filter="projects">🏠 Projets</button>
-        <button class="pill ${activeFilter === "sport-plan" ? "active" : ""}" data-filter="sport-plan">🏅 Programme sport</button>
-        <button class="pill ${activeFilter === "living" ? "active" : ""}" data-filter="living">🌿 Vivant</button>
-        <button class="pill ${activeFilter === "people" ? "active" : ""}" data-filter="people">👥 Personnes</button>
-        <button class="pill ${activeFilter === "done" ? "active" : ""}" data-filter="done">Terminées</button>
+      <div class="task-view-heading">
+        <div>
+          <strong>${
+            activeFilter === "focus" ? "À traiter maintenant" :
+            activeFilter === "upcoming" ? "À venir" :
+            activeFilter === "no-date" ? "Sans échéance" :
+            activeFilter === "linked" ? "Tâches liées" :
+            "Terminées"
+          }</strong>
+          <span>${visible.length} tâche${visible.length > 1 ? "s" : ""}</span>
+        </div>
       </div>
 
-      <div class="section list" id="task-list">
+      <div class="section list task-list-v32" id="task-list">
         ${
           visible.length
             ? visible.map(task => taskRow(task, objectiveMap, projectMap, assetMap, aquariumMap, plantMap, peopleMap)).join("")
-            : `<div class="empty">Aucune tâche dans cette vue.</div>`
+            : `<div class="empty task-empty-v32">${
+                activeFilter === "focus"
+                  ? "Rien d'urgent. Les tâches sans date sont maintenant rangées dans « Sans date »."
+                  : "Aucune tâche dans cette vue."
+              }</div>`
         }
       </div>
     </section>
@@ -354,6 +436,20 @@ export async function renderTasks(container) {
       activeFilter = btn.dataset.filter;
       await renderTasks(container);
     });
+  });
+
+  container.querySelectorAll("[data-linked-filter]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      linkedFilter = btn.dataset.linkedFilter;
+      if (linkedFilter !== "objectives") objectiveContextId = null;
+      await renderTasks(container);
+    });
+  });
+
+  container.querySelector("#task-clear-context")?.addEventListener("click", async () => {
+    objectiveContextId = null;
+    linkedFilter = "all";
+    await renderTasks(container);
   });
 
   container.querySelectorAll(".task-toggle").forEach(input => {
@@ -546,6 +642,15 @@ export async function showAddTaskModal(preset = {}) {
       </div>
 
       <div class="field">
+        <label for="task-priority">Priorité</label>
+        <select id="task-priority" name="priority">
+          <option value="high" ${preset.priority === "high" ? "selected" : ""}>Haute</option>
+          <option value="medium" ${!preset.priority || preset.priority === "medium" ? "selected" : ""}>Normale</option>
+          <option value="low" ${preset.priority === "low" ? "selected" : ""}>Basse</option>
+        </select>
+      </div>
+
+      <div class="field">
         <label for="task-objective">Objectif lié</label>
         <select id="task-objective" name="objectiveId">
           <option value="">Aucun objectif</option>
@@ -643,6 +748,7 @@ export async function showAddTaskModal(preset = {}) {
       title: String(fd.get("title") || "").trim(),
       description: String(fd.get("description") || "").trim(),
       folder: String(fd.get("folder") || "").trim() || "Général",
+      priority: String(fd.get("priority") || preset.priority || "medium"),
       dueDate: String(fd.get("dueDate") || ""),
       reminderAt: String(fd.get("reminderAt") || ""),
       objectiveId: String(fd.get("objectiveId") || "") || null,
@@ -686,6 +792,21 @@ export async function showAddTaskModal(preset = {}) {
       }
     }
   });
+}
+
+export function requestTasksForObjective(objectiveId) {
+  activeFilter = "linked";
+  linkedFilter = "objectives";
+  objectiveContextId = objectiveId || null;
+  taskSearch = "";
+  window.dispatchEvent(new CustomEvent("myhub:navigate", { detail: "tasks" }));
+}
+
+export function requestTaskView(view = "focus") {
+  activeFilter = ["focus","upcoming","no-date","linked","done"].includes(view) ? view : "focus";
+  if (activeFilter !== "linked") objectiveContextId = null;
+  taskSearch = "";
+  window.dispatchEvent(new CustomEvent("myhub:navigate", { detail: "tasks" }));
 }
 
 export async function getTasksSummary() {

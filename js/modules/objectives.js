@@ -21,8 +21,12 @@ import {
   deleteFutureTasksForAction,
   deleteFutureObjectiveActionTasks,
   deleteAllObjectiveLinkedTasks,
-  getObjectiveTaskStats
+  getObjectiveTaskStats,
+  syncMilestoneFromTask
 } from "../core/objective_tasks.js";
+
+import { openImmediateTaskModal } from "../core/task_modal_guard.js";
+import { requestTasksForObjective } from "./tasks.js";
 
 let currentView = "active";
 let currentObjectiveId = null;
@@ -239,11 +243,13 @@ function progressModeLabel(mode) {
   return "Progression manuelle";
 }
 
-function objectiveCard(objective, milestones) {
+function objectiveCard(objective, milestones, tasks = []) {
   const progress = progressFor(objective, milestones);
   const state = objectiveState(objective, milestones);
   const linked = milestones.filter(m => m.objectiveId === objective.id);
   const due = daysUntil(objective.targetDate);
+  const linkedTasks = tasks.filter(task => task.objectiveId === objective.id);
+  const openTasks = linkedTasks.filter(task => !task.done);
 
   let meta = `${progressModeLabel(objective.progressMode)} · ${formatDate(objective.targetDate)}`;
 
@@ -268,6 +274,7 @@ function objectiveCard(objective, milestones) {
       <div class="objective-badges">
         <span class="objective-badge priority-${objective.priority || "medium"}">${priorityLabel(objective.priority)}</span>
         <span class="objective-badge">${state.label}</span>
+        ${openTasks.length ? `<span class="objective-badge">✓ ${openTasks.length} tâche${openTasks.length > 1 ? "s" : ""}</span>` : ""}
         ${
           due !== null && due >= 0 && due <= 30 && objective.status !== "completed"
             ? `<span class="objective-badge">J-${due}</span>`
@@ -324,7 +331,7 @@ async function renderActive(shell) {
       <div class="objectives-list">
         ${
           active.length
-            ? active.map(o => objectiveCard(o, data.milestones)).join("")
+            ? active.map(o => objectiveCard(o, data.milestones, data.tasks)).join("")
             : `
               <div class="objective-empty">
                 <h3>Aucun objectif actif</h3>
@@ -382,7 +389,7 @@ async function renderAll(shell) {
       <div class="objectives-list" style="margin-top:12px">
         ${
           filtered.length
-            ? filtered.map(o => objectiveCard(o, data.milestones)).join("")
+            ? filtered.map(o => objectiveCard(o, data.milestones, data.tasks)).join("")
             : `<div class="objective-empty"><h3>Aucun résultat</h3><p>Aucun objectif dans ce filtre.</p></div>`
         }
       </div>
@@ -485,6 +492,17 @@ async function renderDetail(shell, objectiveId) {
   const actions = data.actions.filter(a => a.objectiveId === objective.id && a.active !== false);
   const objectiveTasks = data.tasks.filter(t => t.objectiveId === objective.id);
   const taskStats = await getObjectiveTaskStats(objective.id);
+
+  const priorityRank = { high: 0, medium: 1, low: 2 };
+  const concreteTasks = objectiveTasks
+    .filter(task => task.source !== "objective-recurring")
+    .sort((a,b) =>
+      Number(a.done) - Number(b.done) ||
+      (priorityRank[a.priority || "medium"] ?? 1) - (priorityRank[b.priority || "medium"] ?? 1) ||
+      String(a.dueDate || "9999-12-31").localeCompare(String(b.dueDate || "9999-12-31"))
+    );
+  const openConcreteTasks = concreteTasks.filter(task => !task.done);
+  const doneConcreteTasks = concreteTasks.filter(task => task.done);
 
   const progress = progressFor(objective, data.milestones);
   const expected = expectedProgress(objective);
@@ -593,16 +611,40 @@ async function renderDetail(shell, objectiveId) {
         : ""
     }
 
-    <section class="objective-detail-card objective-task-summary" style="margin-top:12px">
+    <section class="objective-detail-card objective-next-actions" style="margin-top:12px">
       <div class="objective-detail-head">
         <div>
-          <h3>Actions & tâches</h3>
-          <p class="muted" style="margin:4px 0 0">Les tâches générées restent liées à cet objectif.</p>
+          <h3>Prochaines tâches</h3>
+          <p class="muted" style="margin:4px 0 0">Les actions concrètes qui font avancer cet objectif.</p>
         </div>
-        <button class="ghost-btn" id="objective-open-tasks">Voir les tâches</button>
+        <button class="primary-btn" id="objective-add-task">+ Tâche</button>
       </div>
 
-      <div class="objective-metrics">
+      <div class="objective-next-task-list">
+        ${openConcreteTasks.length
+          ? openConcreteTasks.slice(0,5).map(task => `
+              <article class="objective-next-task" data-objective-task-id="${task.id}">
+                <button class="objective-next-task-check" data-objective-task-toggle="${task.id}" aria-label="Terminer">${task.done ? "✓" : ""}</button>
+                <div>
+                  <strong>${escapeHtml(task.title)}</strong>
+                  <span>
+                    ${task.dueDate ? formatDate(task.dueDate) : "Sans date"}
+                    ${task.priority === "high" ? " · priorité haute" : ""}
+                  </span>
+                </div>
+                ${task.milestoneId ? `<small>Jalon</small>` : ""}
+              </article>
+            `).join("")
+          : `<div class="objective-empty compact"><h3>Aucune tâche ouverte</h3><p>Ajoute une prochaine action concrète.</p></div>`
+        }
+      </div>
+
+      <div class="objective-task-footer">
+        <span>${openConcreteTasks.length} ouverte${openConcreteTasks.length > 1 ? "s" : ""} · ${doneConcreteTasks.length} terminée${doneConcreteTasks.length > 1 ? "s" : ""}</span>
+        <button class="ghost-btn" id="objective-open-tasks">Toutes les tâches</button>
+      </div>
+
+      <div class="objective-metrics objective-task-metrics">
         <div class="objective-metric">
           <span>Cette semaine</span>
           <strong>${taskStats.weekDone}/${taskStats.weekTotal}</strong>
@@ -721,7 +763,35 @@ async function renderDetail(shell, objectiveId) {
   shell.querySelector("#objective-edit").addEventListener("click", () => showObjectiveModal(objective.id));
 
   shell.querySelector("#objective-open-tasks").addEventListener("click", () => {
-    window.dispatchEvent(new CustomEvent("myhub:navigate", { detail: "tasks" }));
+    requestTasksForObjective(objective.id);
+  });
+
+  shell.querySelector("#objective-add-task").addEventListener("click", () => {
+    openImmediateTaskModal({
+      objectiveId: objective.id,
+      folder: objective.category || "Objectifs",
+      priority: "medium",
+      returnRoute: "objectives"
+    });
+  });
+
+  shell.querySelectorAll("[data-objective-task-toggle]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const task = objectiveTasks.find(item => item.id === button.dataset.objectiveTaskToggle);
+      if (!task) return;
+
+      const updated = {
+        ...task,
+        done: !task.done,
+        completedAt: !task.done ? new Date().toISOString() : null,
+        updatedAt: new Date().toISOString()
+      };
+
+      await putOne("tasks", updated);
+      await syncMilestoneFromTask(updated);
+      window.dispatchEvent(new CustomEvent("myhub:data-changed"));
+      await renderDetail(shell, objective.id);
+    });
   });
 
   const complete = shell.querySelector("#objective-complete");

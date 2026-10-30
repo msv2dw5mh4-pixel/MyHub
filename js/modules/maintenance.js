@@ -19,7 +19,7 @@ import {
   deleteMaintenanceTasksForPlan
 } from "../core/maintenance_tasks.js";
 
-import { showAddTaskModal } from "./tasks.js";
+import { openImmediateTaskModal } from "../core/task_modal_guard.js";
 
 let currentView = "overview";
 let currentAssetId = null;
@@ -767,7 +767,12 @@ async function renderAssetDetail(shell, assetId) {
   shell.querySelector("#maintenance-add-plan").addEventListener("click", () => showPlanModal(asset.id));
   shell.querySelector("#maintenance-add-event").addEventListener("click", () => showManualMaintenanceEventModal(asset.id));
 
-  const addLinkedTask = () => showAddTaskModal({ assetId: asset.id, folder: "Entretien" });
+  const addLinkedTask = () => openImmediateTaskModal({
+    assetId: asset.id,
+    folder: "Entretien",
+    title: "",
+    description: `Tâche liée à ${asset.name}`
+  });
   shell.querySelector("#maintenance-add-linked-task").addEventListener("click", addLinkedTask);
   shell.querySelector("#maintenance-add-linked-task-2").addEventListener("click", addLinkedTask);
 

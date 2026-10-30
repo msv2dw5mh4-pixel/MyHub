@@ -520,3 +520,19 @@
     grid-template-columns: repeat(4, minmax(0,1fr));
   }
 }
+
+
+/* MyHub V32 — Objectifs orientés actions */
+.objective-next-actions{display:grid;gap:12px}
+.objective-next-task-list{display:grid;gap:6px}
+.objective-next-task{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 10px;border:1px solid var(--border);border-radius:13px;background:var(--surface-soft)}
+.objective-next-task-check{width:28px;height:28px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);padding:0;color:#fff;font-weight:900}
+.objective-next-task>div{display:grid;gap:3px;min-width:0}
+.objective-next-task>div strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.objective-next-task>div span{font-size:9px;color:var(--muted)}
+.objective-next-task>small{font-size:8px;color:var(--ob-accent);font-weight:850;background:color-mix(in srgb,var(--ob-accent) 10%,var(--surface));border-radius:999px;padding:4px 6px}
+.objective-task-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:2px}
+.objective-task-footer>span{font-size:9px;color:var(--muted)}
+.objective-task-footer .ghost-btn{font-size:9px;padding:7px 9px}
+.objective-task-metrics{margin-top:2px;padding-top:10px;border-top:1px solid var(--border)}
+.objective-empty.compact{padding:16px}.objective-empty.compact h3{font-size:12px}.objective-empty.compact p{font-size:10px}

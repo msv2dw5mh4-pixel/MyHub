@@ -183,6 +183,15 @@ export function openImmediateTaskModal(preset = {}) {
         >
       </div>
 
+      <div class="field">
+        <label for="task-priority-fast">Priorité</label>
+        <select id="task-priority-fast" name="priority">
+          <option value="high" ${preset.priority === "high" ? "selected" : ""}>Haute</option>
+          <option value="medium" ${!preset.priority || preset.priority === "medium" ? "selected" : ""}>Normale</option>
+          <option value="low" ${preset.priority === "low" ? "selected" : ""}>Basse</option>
+        </select>
+      </div>
+
       <div class="row">
         <div class="field">
           <label for="task-due-fast">Échéance</label>
@@ -280,12 +289,19 @@ export function openImmediateTaskModal(preset = {}) {
         ? livingLink.split(":")
         : [null, null];
 
+      const returnRoute = String(preset.returnRoute || "tasks");
+      const {
+        returnRoute: _returnRoute,
+        ...persistedPreset
+      } = preset;
+
       const task = {
-        ...preset,
+        ...persistedPreset,
         id: preset.id || uid("task"),
         title,
         description: String(fd.get("description") || "").trim(),
         folder: String(fd.get("folder") || "").trim() || "Général",
+        priority: String(fd.get("priority") || preset.priority || "medium"),
         dueDate: String(fd.get("dueDate") || ""),
         reminderAt: String(fd.get("reminderAt") || ""),
         objectiveId: String(fd.get("objectiveId") || "") || null,
@@ -313,7 +329,7 @@ export function openImmediateTaskModal(preset = {}) {
         closeModal();
 
         window.dispatchEvent(
-          new CustomEvent("myhub:navigate", { detail: "tasks" })
+          new CustomEvent("myhub:navigate", { detail: returnRoute })
         );
 
         window.dispatchEvent(
@@ -344,10 +360,11 @@ export function openImmediateTaskModal(preset = {}) {
 }
 
 // Capture le clic avant les anciens listeners de tasks.js et app.js.
+// V30.3 : même chemin robuste pour créer ET modifier une tâche.
 document.addEventListener(
   "click",
   event => {
-    const button = event.target?.closest?.("#add-task, #quick-add-task");
+    const button = event.target?.closest?.("#add-task, #quick-add-task, .task-edit");
     if (!button) return;
 
     event.preventDefault();
@@ -355,6 +372,32 @@ document.addEventListener(
 
     if (button.id === "quick-add-task") {
       closeModal();
+      queueMicrotask(() => openImmediateTaskModal());
+      return;
+    }
+
+    if (button.classList.contains("task-edit")) {
+      const row = button.closest("[data-task-id]");
+      const taskId = String(row?.dataset?.taskId || "");
+      if (!taskId) return;
+
+      queueMicrotask(async () => {
+        try {
+          const tasks = await safeGetAll("tasks");
+          const task = tasks.find(item => String(item?.id || "") === taskId);
+
+          if (!task) {
+            alert("Cette tâche est introuvable. Recharge la page puis réessaie.");
+            return;
+          }
+
+          openImmediateTaskModal(task);
+        } catch (error) {
+          console.error("[Tâches V30.3] Ouverture modification impossible :", error);
+          alert("Impossible d'ouvrir cette tâche pour modification.");
+        }
+      });
+      return;
     }
 
     queueMicrotask(() => openImmediateTaskModal());

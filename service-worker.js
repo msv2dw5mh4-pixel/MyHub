@@ -1,4 +1,4 @@
-const CACHE = "myhub-v31-location";
+const CACHE = "myhub-v32-organisation-tasks-objectives";
 
 const ASSETS = [
   "./",

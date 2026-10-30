@@ -1,3 +1,16 @@
+# MyHub V32 — Organisation, Tâches & Objectifs
+
+Cette version remet de l'ordre dans la page Modules et consolide le lien Objectif → Tâches.
+
+Principaux changements :
+- modules regroupés par grandes familles d'usage ;
+- vues Tâches simplifiées : À traiter, À venir, Sans date, Liées, Terminées ;
+- priorités Haute / Normale / Basse ;
+- filtre des tâches par source et par objectif ;
+- création d'une tâche directement depuis un objectif ;
+- prochaines tâches visibles dans la fiche Objectif ;
+- le module Cadeaux reste prévu pour une version ultérieure.
+
 # MyHub V31 — Location
 
 Nouveau module de gestion des 3 tonneaux en location : planning, réservations, locataires, prix, cautions, photos avant/après, pièce d'identité et tableau de bord annuel.
