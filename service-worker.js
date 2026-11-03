@@ -1,4 +1,4 @@
-const CACHE = "myhub-v33-2-tasks-folders";
+const CACHE = "myhub-v33-3-timeclock";
 
 const ASSETS = [
   "./",
@@ -23,6 +23,7 @@ const ASSETS = [
   "./css/meals.css",
   "./css/rental.css",
   "./css/notifications.css",
+  "./css/timeclock.css",
   "./js/app.js",
   "./js/core/db.js",
   "./js/core/version.js",
@@ -66,6 +67,7 @@ const ASSETS = [
   "./js/modules/shopping.js",
   "./js/modules/rental.js",
   "./js/modules/notifications.js",
+  "./js/modules/timeclock.js",
   "./manifest.webmanifest",
   "./assets/icons/icon-192.svg",
   "./assets/icons/icon-512.svg"
@@ -144,4 +146,11 @@ self.addEventListener("notificationclick", event => {
       return null;
     })
   );
+});
+
+
+self.addEventListener("message", event => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });

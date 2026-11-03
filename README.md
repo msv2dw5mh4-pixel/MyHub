@@ -1,3 +1,11 @@
+# MyHub V33.3 — Badgeuse
+
+Ajout d’un module professionnel indépendant pour pointer l’arrivée, les pauses, les reprises et le départ. La Badgeuse calcule le temps travaillé quotidien, hebdomadaire et mensuel, permet de nommer chaque temps et de corriger l’historique.
+
+# MyHub V33.2.1 — Mise à jour PWA renforcée
+
+Cette version reprend intégralement V33.2 et ajoute un mécanisme plus robuste de mise à jour sur iPhone : cache-busting du fichier principal, Service Worker enregistré avec `updateViaCache: "none"`, vérification explicite des mises à jour et rechargement automatique unique lors du changement de contrôleur.
+
 # MyHub V33.2 — Tâches cliquables & dossiers
 
 Cette version améliore le module Tâches : les cartes de tâches personnelles sont directement cliquables pour les modifier et les tâches peuvent être organisées dans des dossiers persistants, avec création, filtrage, renommage et suppression sécurisée.

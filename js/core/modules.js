@@ -2,6 +2,7 @@ export const moduleGroups = [
   { id: "organiser", name: "Organiser", description: "Ce qui structure tes journées et tes projets." },
   { id: "quotidien", name: "Quotidien", description: "Les outils que tu utilises régulièrement." },
   { id: "progression", name: "Progression", description: "Sport, apprentissage et idées à faire avancer." },
+  { id: "travail", name: "Travail", description: "Outils professionnels indépendants du reste de MyHub." },
   { id: "biens", name: "Finances & biens", description: "Argent, matériel, documents et locations." },
   { id: "analyse", name: "Analyse", description: "Prendre du recul sur l'ensemble de MyHub." }
 ];
@@ -22,6 +23,8 @@ export const modules = [
   { id: "sport", name: "Sport", icon: "🏋️", route: "sport", enabled: true, group: "progression", order: 10, description: "Objectifs multisport, programmes adaptatifs, activités et records." },
   { id: "learning", name: "Apprentissage", icon: "🧠", route: "learning", enabled: true, group: "progression", order: 20, description: "Compétences, formations, sessions et progression mesurable." },
   { id: "ideas", name: "Idées", icon: "💡", route: "ideas", enabled: true, group: "progression", order: 30, description: "Inbox rapide pour capturer puis transformer une idée en action." },
+
+  { id: "timeclock", name: "Badgeuse", icon: "🕘", route: "timeclock", enabled: true, group: "travail", order: 10, description: "Arrivée, pauses, reprise et départ avec cumul quotidien, hebdomadaire et mensuel." },
 
   { id: "budget", name: "Budget", icon: "💰", route: "budget", enabled: true, group: "biens", order: 10, description: "Revenus, dépenses, épargne et suivi mensuel." },
   { id: "stock", name: "Stock", icon: "📦", route: "stock", enabled: true, group: "biens", order: 20, description: "Objets, achat, vente, marge et statistiques." },

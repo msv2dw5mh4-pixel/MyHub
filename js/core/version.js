@@ -1,17 +1,19 @@
-export const APP_VERSION = "V33.2";
+export const APP_VERSION = "V33.3";
 
 export const RELEASE_INFO = {
   version: APP_VERSION,
-  date: "30 octobre 2026",
-  title: "Tâches cliquables et dossiers",
-  summary: "Les tâches peuvent maintenant être ouvertes directement en touchant leur carte, et elles peuvent être rangées dans de vrais dossiers.",
+  date: "3 novembre 2026",
+  title: "Nouveau module Badgeuse",
+  summary: "Ajout d’une badgeuse professionnelle indépendante pour suivre les arrivées, pauses, reprises et temps de travail.",
   details: [
-    "Un clic sur une tâche personnelle ouvre directement sa fiche pour modifier le nom, la date, la priorité, le dossier ou les liens.",
-    "Les tâches automatiques ouvrent leur module d’origine afin de conserver les relations MyHub intactes.",
-    "Ajout de dossiers de tâches persistants avec création, filtrage, renommage et suppression.",
-    "Supprimer un dossier ne supprime jamais ses tâches : elles sont déplacées dans Général.",
-    "Le dossier peut être choisi depuis les formulaires de création et de modification.",
-    "Correction du traitement des rappels Personnes lors de leur suppression.",
-    "Correction de la synchronisation de progression des objectifs liés aux tâches."
+    "Nouveau module Travail → Badgeuse, totalement indépendant des autres modules.",
+    "Un bouton principal alterne arrivée, début de pause et reprise du travail.",
+    "Un bouton séparé permet de terminer proprement la journée.",
+    "Chaque temps de travail peut être nommé : IWS, TMA, réunion, administratif, etc.",
+    "Possibilité de changer de nom en cours de journée sans créer de pause.",
+    "Cumul automatique du temps travaillé par jour, semaine et mois.",
+    "Répartition mensuelle du temps par nom.",
+    "Historique des 30 derniers jours avec correction manuelle des heures et libellés.",
+    "Les données restent locales et sont incluses dans la sauvegarde MyHub."
   ]
 };

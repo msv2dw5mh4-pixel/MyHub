@@ -19,6 +19,7 @@ import { renderMeals, requestNewMeal, ensureMealsSeeded } from "./modules/meals.
 import { renderShopping, requestNewShoppingItem } from "./modules/shopping.js";
 import { renderRental, requestNewRentalBooking } from "./modules/rental.js";
 import { renderNotifications, startMyHubReminderScheduler, clearMyHubBadge } from "./modules/notifications.js";
+import { renderTimeclock } from "./modules/timeclock.js";
 import { renderModules } from "./modules/modules.js";
 import { renderSettings } from "./modules/settings.js";
 import { renderSearch } from "./modules/search.js";
@@ -51,6 +52,7 @@ const routes = {
   shopping: { title: "Courses", render: renderShopping },
   rental: { title: "Location", render: renderRental },
   notifications: { title: "Rappel MyHub", render: renderNotifications },
+  timeclock: { title: "Badgeuse", render: renderTimeclock },
   tasks: { title: "Tâches", render: renderTasks },
   stock: { title: "Stock", render: renderStock },
   tracker: { title: "Tracker", render: renderTracker },
@@ -271,8 +273,28 @@ window.addEventListener("myhub:data-changed", async () => {
 });
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js").catch(console.error);
+  let reloadingForServiceWorker = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloadingForServiceWorker) return;
+    if (sessionStorage.getItem("myhub-sw-reloaded-v33.3") === "1") return;
+
+    reloadingForServiceWorker = true;
+    sessionStorage.setItem("myhub-sw-reloaded-v33.3", "1");
+    window.location.reload();
+  });
+
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register(
+        "./service-worker.js?v=33.3",
+        { updateViaCache: "none" }
+      );
+
+      await registration.update();
+    } catch (error) {
+      console.error("Mise à jour Service Worker :", error);
+    }
   });
 }
 
