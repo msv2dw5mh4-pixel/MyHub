@@ -32,6 +32,7 @@ import { syncSportPlanTasks } from "./core/sport_planner.js";
 import { syncLivingCareTasks } from "./core/living_tasks.js";
 import { syncPeopleReminderTasks } from "./core/people_tasks.js";
 import { runDataIntegrityRepair } from "./core/integrity.js";
+import { startAppUpdateWatcher } from "./core/updater.js";
 
 const view = document.getElementById("view");
 const pageTitle = document.getElementById("page-title");
@@ -277,17 +278,17 @@ if ("serviceWorker" in navigator) {
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (reloadingForServiceWorker) return;
-    if (sessionStorage.getItem("myhub-sw-reloaded-v33.3.1") === "1") return;
+    if (sessionStorage.getItem("myhub-sw-reloaded-v33.4") === "1") return;
 
     reloadingForServiceWorker = true;
-    sessionStorage.setItem("myhub-sw-reloaded-v33.3.1", "1");
+    sessionStorage.setItem("myhub-sw-reloaded-v33.4", "1");
     window.location.reload();
   });
 
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(
-        "./service-worker.js?v=33.3.1",
+        "./service-worker.js?v=33.4",
         { updateViaCache: "none" }
       );
 
@@ -317,4 +318,5 @@ if ("serviceWorker" in navigator) {
   }
 
   await navigate("dashboard");
+  startAppUpdateWatcher();
 })();

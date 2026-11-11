@@ -1,3 +1,7 @@
+# MyHub V33.4 — Mises à jour intégrées
+
+MyHub dispose maintenant de son propre mécanisme de détection et d’installation des nouvelles versions. `version.json` sert de source de vérité distante et est toujours demandé sans cache. Les Réglages affichent la version installée et la dernière version disponible, avec un bouton de mise à jour lorsque nécessaire.
+
 # MyHub V33.3.1 — Badgeuse : période manuelle
 
 Ajout de la possibilité d’insérer manuellement une période de travail oubliée, sur la journée en cours ou sur une journée passée. La période rejoint automatiquement les cumuls de la Badgeuse.

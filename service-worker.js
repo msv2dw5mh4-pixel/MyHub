@@ -1,4 +1,4 @@
-const CACHE = "myhub-v33-3-1-manual-period";
+const CACHE = "myhub-v33-4-integrated-updater";
 
 const ASSETS = [
   "./",
@@ -27,6 +27,7 @@ const ASSETS = [
   "./js/app.js",
   "./js/core/db.js",
   "./js/core/version.js",
+  "./js/core/updater.js",
   "./js/core/modules.js",
   "./js/core/ui.js",
   "./js/core/task_modal_guard.js",
@@ -93,6 +94,15 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+
+  if (url.pathname.endsWith("/version.json")) {
+    event.respondWith(
+      fetch(new Request(event.request, { cache: "no-store" }))
+    );
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)

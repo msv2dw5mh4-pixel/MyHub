@@ -1,5 +1,6 @@
 import { escapeHtml, openModal, closeModal } from "../core/ui.js";
 import { APP_VERSION, RELEASE_INFO } from "../core/version.js";
+import { checkForAppUpdate, installAvailableUpdate } from "../core/updater.js";
 import {
   prepareBackup,
   downloadBackupRaw,
@@ -175,6 +176,24 @@ export async function renderSettings(container) {
             <p>${escapeHtml(RELEASE_INFO.summary)}</p>
           </div>
 
+          <div class="settings-update-box" id="settings-update-box">
+            <div class="settings-update-line">
+              <span>Version installée</span>
+              <strong>${escapeHtml(APP_VERSION)}</strong>
+            </div>
+            <div class="settings-update-line">
+              <span>Dernière version disponible</span>
+              <strong id="settings-latest-version">Vérification…</strong>
+            </div>
+            <div class="settings-update-status checking" id="settings-update-status">
+              Vérification de GitHub Pages…
+            </div>
+            <div class="settings-update-actions">
+              <button class="ghost-btn" id="settings-check-update">Vérifier les mises à jour</button>
+              <button class="primary-btn" id="settings-install-update" hidden>Mettre à jour MyHub</button>
+            </div>
+          </div>
+
           <button class="ghost-btn" id="settings-release-details">Voir les nouveautés</button>
         </article>
 
@@ -238,6 +257,85 @@ export async function renderSettings(container) {
       </div>
     </section>
   `;
+
+  const latestVersionEl = container.querySelector("#settings-latest-version");
+  const updateStatusEl = container.querySelector("#settings-update-status");
+  const checkUpdateBtn = container.querySelector("#settings-check-update");
+  const installUpdateBtn = container.querySelector("#settings-install-update");
+
+  async function refreshUpdateStatus() {
+    if (checkUpdateBtn) {
+      checkUpdateBtn.disabled = true;
+      checkUpdateBtn.textContent = "Vérification…";
+    }
+
+    if (updateStatusEl) {
+      updateStatusEl.className = "settings-update-status checking";
+      updateStatusEl.textContent = "Vérification de GitHub Pages…";
+    }
+
+    const update = await checkForAppUpdate();
+
+    if (latestVersionEl) latestVersionEl.textContent = update.latestVersion || "Indisponible";
+
+    if (!update.ok) {
+      if (updateStatusEl) {
+        updateStatusEl.className = "settings-update-status offline";
+        updateStatusEl.textContent = `${update.error} La version installée reste utilisable hors ligne.`;
+      }
+      if (installUpdateBtn) installUpdateBtn.hidden = true;
+    } else if (update.updateAvailable) {
+      if (updateStatusEl) {
+        updateStatusEl.className = "settings-update-status available";
+        updateStatusEl.textContent = `Mise à jour disponible : ${update.latestVersion}.`;
+      }
+      if (installUpdateBtn) {
+        installUpdateBtn.hidden = false;
+        installUpdateBtn.textContent = `Mettre à jour vers ${update.latestVersion}`;
+      }
+    } else {
+      if (updateStatusEl) {
+        updateStatusEl.className = "settings-update-status current";
+        updateStatusEl.textContent = "✓ MyHub est à jour.";
+      }
+      if (installUpdateBtn) installUpdateBtn.hidden = true;
+    }
+
+    if (checkUpdateBtn) {
+      checkUpdateBtn.disabled = false;
+      checkUpdateBtn.textContent = "Vérifier les mises à jour";
+    }
+
+    return update;
+  }
+
+  checkUpdateBtn?.addEventListener("click", refreshUpdateStatus);
+
+  installUpdateBtn?.addEventListener("click", async () => {
+    installUpdateBtn.disabled = true;
+    if (checkUpdateBtn) checkUpdateBtn.disabled = true;
+
+    try {
+      await installAvailableUpdate(message => {
+        installUpdateBtn.textContent = message;
+        if (updateStatusEl) {
+          updateStatusEl.className = "settings-update-status installing";
+          updateStatusEl.textContent = message;
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      installUpdateBtn.disabled = false;
+      if (checkUpdateBtn) checkUpdateBtn.disabled = false;
+      installUpdateBtn.textContent = "Réessayer la mise à jour";
+      if (updateStatusEl) {
+        updateStatusEl.className = "settings-update-status offline";
+        updateStatusEl.textContent = "La mise à jour n’a pas pu être terminée.";
+      }
+    }
+  });
+
+  refreshUpdateStatus().catch(() => {});
 
   container.querySelector("#settings-release-details")?.addEventListener("click", () => {
     openModal(`

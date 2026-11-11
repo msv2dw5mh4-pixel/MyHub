@@ -411,3 +411,27 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .task-folder-manager-actions{display:flex;gap:5px;flex:0 0 auto}.task-folder-manager-actions button{padding:7px 9px;font-size:8px}
 .task-folder-manager-note{margin-top:10px;padding:10px;border-radius:12px;background:var(--surface-soft);font-size:9px;color:var(--muted);line-height:1.45}
 @media(max-width:430px){.task-folders-head{align-items:flex-start;flex-direction:column}.task-folders-actions{width:100%}.task-folders-actions button{flex:1}}
+
+
+/* MyHub V33.4 — système de mise à jour intégré */
+.settings-update-box{display:grid;gap:8px;padding:11px;border-radius:15px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)}
+.settings-update-line{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.settings-update-line span{font-size:8px;color:#b9c2cf;text-transform:uppercase;font-weight:850}
+.settings-update-line strong{font-size:10px;color:#fff}
+.settings-update-status{padding:8px 9px;border-radius:11px;font-size:9px;font-weight:750;line-height:1.4}
+.settings-update-status.checking{background:rgba(255,255,255,.08);color:#d6dde8}
+.settings-update-status.current{background:rgba(22,163,74,.18);color:#c8f7d4}
+.settings-update-status.available{background:rgba(245,158,11,.2);color:#ffe3a3}
+.settings-update-status.installing{background:rgba(59,130,246,.2);color:#d9e9ff}
+.settings-update-status.offline{background:rgba(255,255,255,.08);color:#d6dde8}
+.settings-update-actions{display:flex;gap:7px;flex-wrap:wrap}
+.settings-update-actions button{font-size:8px;padding:8px 10px}
+.settings-update-actions [hidden]{display:none!important}
+.app-update-banner{position:fixed;z-index:9999;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:calc(78px + env(safe-area-inset-bottom));display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:9px;padding:11px 12px;border-radius:17px;background:#111827;color:#fff;box-shadow:0 14px 38px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12)}
+.app-update-banner>div{display:grid;gap:2px;min-width:0}
+.app-update-banner strong{font-size:10px}
+.app-update-banner span{font-size:8px;color:#c8d0dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-update-banner-btn{border:0;border-radius:11px;padding:9px 11px;background:#fff;color:#111827;font-size:8px;font-weight:900;white-space:nowrap}
+.app-update-banner-btn:disabled{opacity:.72}
+.app-update-banner-close{display:grid;place-items:center;width:28px;height:28px;border:0;border-radius:9px;background:rgba(255,255,255,.09);color:#fff;font-size:16px}
+@media(max-width:430px){.app-update-banner{grid-template-columns:minmax(0,1fr) auto}.app-update-banner-btn{grid-column:1/-1;width:100%}.app-update-banner-close{position:absolute;right:8px;top:8px}.app-update-banner>div{padding-right:28px}}
