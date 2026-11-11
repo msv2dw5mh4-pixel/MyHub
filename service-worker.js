@@ -1,4 +1,4 @@
-const CACHE = "myhub-v33-3-timeclock";
+const CACHE = "myhub-v33-3-1-manual-period";
 
 const ASSETS = [
   "./",

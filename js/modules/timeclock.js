@@ -96,6 +96,29 @@ function amplitudeMs(day) {
   return durationMs(day.arrivedAt, end);
 }
 
+function normalizeDayFromSegments(day) {
+  const segments = [...(day?.segments || [])]
+    .filter(segment => segment?.start)
+    .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  const starts = segments.map(segment => segment.start).filter(Boolean);
+  const ends = segments.map(segment => segment.end).filter(Boolean);
+
+  return {
+    ...day,
+    segments,
+    arrivedAt: starts[0] || day?.arrivedAt || null,
+    departedAt: day?.status === "finished"
+      ? (ends.sort((a, b) => new Date(a) - new Date(b)).at(-1) || day?.departedAt || null)
+      : day?.departedAt || null
+  };
+}
+
+function segmentsOverlap(aStart, aEnd, bStart, bEnd) {
+  if (!aStart || !aEnd || !bStart || !bEnd) return false;
+  return new Date(aStart) < new Date(bEnd) && new Date(bStart) < new Date(aEnd);
+}
+
 function dayStatusLabel(day) {
   if (!day) return "Pas encore pointé";
   if (day.status === "working") return "En travail";
@@ -433,6 +456,130 @@ function startLiveRefresh(container) {
   }, 1000);
 }
 
+async function showManualPeriodModal(container, presetDate = todayISO()) {
+  openModal(`
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">BADGEUSE</p>
+        <h2>Ajouter une période manuellement</h2>
+      </div>
+      <button class="icon-btn" id="timeclock-manual-close">×</button>
+    </div>
+
+    <form class="form-grid" id="timeclock-manual-form">
+      <div class="field">
+        <label for="timeclock-manual-date">Date</label>
+        <input id="timeclock-manual-date" type="date" name="date" value="${escapeHtml(presetDate || todayISO())}" required>
+      </div>
+
+      <div class="field">
+        <label for="timeclock-manual-label">Nom du temps</label>
+        <input id="timeclock-manual-label" name="label" maxlength="80" value="Travail" placeholder="Ex : IWS, TMA, Réunion…" required>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="timeclock-manual-start">Début</label>
+          <input id="timeclock-manual-start" type="time" name="start" required>
+        </div>
+        <div class="field">
+          <label for="timeclock-manual-end">Fin</label>
+          <input id="timeclock-manual-end" type="time" name="end" required>
+        </div>
+      </div>
+
+      <div class="timeclock-manual-note">
+        Tu peux ajouter une période oubliée aujourd’hui ou sur une journée passée. Elle sera automatiquement ajoutée aux cumuls.
+      </div>
+
+      <div class="actions">
+        <button type="button" class="ghost-btn" id="timeclock-manual-cancel">Annuler</button>
+        <button class="primary-btn" type="submit">Ajouter la période</button>
+      </div>
+    </form>
+  `);
+
+  document.querySelector("#timeclock-manual-close")?.addEventListener("click", closeModal);
+  document.querySelector("#timeclock-manual-cancel")?.addEventListener("click", closeModal);
+
+  document.querySelector("#timeclock-manual-form")?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const fd = new FormData(event.currentTarget);
+    const date = String(fd.get("date") || "");
+    const label = String(fd.get("label") || "").trim() || "Travail";
+    const start = localDateTime(date, String(fd.get("start") || ""));
+    const end = localDateTime(date, String(fd.get("end") || ""));
+
+    if (!date || !start || !end) {
+      alert("Renseigne la date, l’heure de début et l’heure de fin.");
+      return;
+    }
+
+    if (new Date(end) <= new Date(start)) {
+      alert("L’heure de fin doit être postérieure à l’heure de début.");
+      return;
+    }
+
+    const existing = await getOne("moduleData", dayId(date)).catch(() => null);
+    const existingSegments = existing?.segments || [];
+
+    if (existingSegments.some(segment =>
+      segmentsOverlap(start, end, segment.start, segment.end || (existing?.status === "working" ? nowIso() : null))
+    )) {
+      alert("Cette période chevauche déjà une période de travail enregistrée.");
+      return;
+    }
+
+    const now = nowIso();
+    const base = existing || {
+      id: dayId(date),
+      module: "timeclock",
+      type: "day",
+      date,
+      status: "finished",
+      arrivedAt: start,
+      departedAt: end,
+      segments: [],
+      pauses: [],
+      createdAt: now,
+      updatedAt: now
+    };
+
+    const next = normalizeDayFromSegments({
+      ...base,
+      segments: [
+        ...(base.segments || []),
+        {
+          id: uid("timeclock_work"),
+          label,
+          start,
+          end,
+          manual: true
+        }
+      ],
+      updatedAt: now
+    });
+
+    // Pour une journée passée / terminée, recalcule le départ sur la dernière période.
+    if (date !== todayISO() || next.status === "finished") {
+      const lastEnd = next.segments
+        .map(segment => segment.end)
+        .filter(Boolean)
+        .sort((a, b) => new Date(a) - new Date(b))
+        .at(-1);
+      next.departedAt = lastEnd || next.departedAt || null;
+      next.status = "finished";
+    }
+
+    await putOne("moduleData", next);
+    closeModal();
+    await renderTimeclock(container);
+    window.dispatchEvent(new CustomEvent("myhub:data-changed"));
+  });
+
+  setTimeout(() => document.querySelector("#timeclock-manual-start")?.focus(), 0);
+}
+
 async function showDayEditor(day, container) {
   const segments = day.segments || [];
   const pauses = day.pauses || [];
@@ -584,6 +731,14 @@ export async function renderTimeclock(container) {
       </div>
 
       <section class="timeclock-punch-card">
+        <div class="timeclock-manual-head">
+          <div>
+            <strong>Pointage</strong>
+            <span>Badge normalement, ou ajoute une période oubliée manuellement.</span>
+          </div>
+          <button class="ghost-btn" id="timeclock-add-manual">+ Période manuelle</button>
+        </div>
+
         <div class="field">
           <label for="timeclock-label">Nom du temps</label>
           <input id="timeclock-label" maxlength="80" value="${escapeHtml(currentLabel || "Travail")}" placeholder="Ex : IWS, TMA, Réunion, Administratif…">
@@ -627,7 +782,10 @@ export async function renderTimeclock(container) {
               <h3>Aujourd’hui</h3>
               <p>Amplitude ${humanDuration(amplitudeMs(today))} · pauses ${humanDuration(pauseMs(today))}</p>
             </div>
-            <button class="ghost-btn" id="timeclock-edit-today">Corriger</button>
+            <div class="timeclock-section-actions">
+              <button class="ghost-btn" id="timeclock-add-manual-today">+ Période</button>
+              <button class="ghost-btn" id="timeclock-edit-today">Corriger</button>
+            </div>
           </div>
           <div class="timeclock-timeline">${renderTimeline(today)}</div>
         </section>
@@ -672,6 +830,14 @@ export async function renderTimeclock(container) {
   `;
 
   const labelInput = container.querySelector("#timeclock-label");
+
+  container.querySelector("#timeclock-add-manual")?.addEventListener("click", () => {
+    showManualPeriodModal(container, todayISO());
+  });
+
+  container.querySelector("#timeclock-add-manual-today")?.addEventListener("click", () => {
+    showManualPeriodModal(container, todayISO());
+  });
 
   container.querySelector("#timeclock-punch")?.addEventListener("click", async () => {
     await punch(labelInput?.value);

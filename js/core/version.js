@@ -1,19 +1,16 @@
-export const APP_VERSION = "V33.3";
+export const APP_VERSION = "V33.3.1";
 
 export const RELEASE_INFO = {
   version: APP_VERSION,
-  date: "3 novembre 2026",
-  title: "Nouveau module Badgeuse",
-  summary: "Ajout d’une badgeuse professionnelle indépendante pour suivre les arrivées, pauses, reprises et temps de travail.",
+  date: "11 novembre 2026",
+  title: "Ajout manuel d’une période de travail",
+  summary: "La Badgeuse permet maintenant d’ajouter une période oubliée, y compris sur une journée passée.",
   details: [
-    "Nouveau module Travail → Badgeuse, totalement indépendant des autres modules.",
-    "Un bouton principal alterne arrivée, début de pause et reprise du travail.",
-    "Un bouton séparé permet de terminer proprement la journée.",
-    "Chaque temps de travail peut être nommé : IWS, TMA, réunion, administratif, etc.",
-    "Possibilité de changer de nom en cours de journée sans créer de pause.",
-    "Cumul automatique du temps travaillé par jour, semaine et mois.",
-    "Répartition mensuelle du temps par nom.",
-    "Historique des 30 derniers jours avec correction manuelle des heures et libellés.",
-    "Les données restent locales et sont incluses dans la sauvegarde MyHub."
+    "Ajout d’un bouton « + Période manuelle » dans la Badgeuse.",
+    "Choix de la date, du nom du temps, de l’heure de début et de l’heure de fin.",
+    "Possibilité d’ajouter une période oubliée sur aujourd’hui ou sur une journée passée.",
+    "La période ajoutée est automatiquement intégrée aux cumuls jour, semaine et mois.",
+    "Protection contre le chevauchement avec une période de travail déjà enregistrée.",
+    "Le bouton Corriger reste disponible pour modifier les périodes existantes."
   ]
 };

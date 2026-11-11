@@ -28,3 +28,12 @@
 .timeclock-local-note{display:grid;gap:4px;padding:11px;border-radius:15px;background:var(--surface-soft)}.timeclock-local-note strong{font-size:10px}.timeclock-local-note p{margin:0;font-size:9px;line-height:1.45;color:var(--muted)}
 .timeclock-edit-section{display:grid;gap:8px}.timeclock-edit-section>strong{font-size:11px}.timeclock-edit-row{display:grid;grid-template-columns:1.3fr .7fr .7fr;gap:7px;padding:9px;border-radius:13px;background:var(--surface-soft)}.timeclock-edit-row.pause{grid-template-columns:1fr 1fr}.timeclock-edit-row .field{margin:0}
 @media(max-width:430px){.timeclock-summary-grid{grid-template-columns:1fr}.timeclock-secondary-actions{grid-template-columns:1fr}.timeclock-edit-row{grid-template-columns:1fr 1fr}.timeclock-edit-label{grid-column:1/-1}}
+
+
+/* V33.3.1 — ajout manuel d'une période */
+.timeclock-manual-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.timeclock-manual-head>div{display:grid;gap:3px}.timeclock-manual-head strong{font-size:11px}.timeclock-manual-head span{font-size:8px;color:var(--muted);line-height:1.4}
+.timeclock-manual-head .ghost-btn{flex:0 0 auto;padding:8px 10px;font-size:8px}
+.timeclock-section-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.timeclock-section-actions .ghost-btn{padding:7px 9px;font-size:8px}
+.timeclock-manual-note{padding:10px;border-radius:13px;background:var(--surface-soft);font-size:9px;color:var(--muted);line-height:1.45}
+@media(max-width:430px){.timeclock-manual-head{flex-direction:column}.timeclock-manual-head .ghost-btn{width:100%}}

@@ -1,3 +1,7 @@
+# MyHub V33.3.1 — Badgeuse : période manuelle
+
+Ajout de la possibilité d’insérer manuellement une période de travail oubliée, sur la journée en cours ou sur une journée passée. La période rejoint automatiquement les cumuls de la Badgeuse.
+
 # MyHub V33.3 — Badgeuse
 
 Ajout d’un module professionnel indépendant pour pointer l’arrivée, les pauses, les reprises et le départ. La Badgeuse calcule le temps travaillé quotidien, hebdomadaire et mensuel, permet de nommer chaque temps et de corriger l’historique.
