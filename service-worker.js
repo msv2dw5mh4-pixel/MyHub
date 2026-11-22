@@ -1,4 +1,4 @@
-const CACHE = "myhub-v33-7-dark-ui";
+const CACHE = "myhub-v33-7-1-ui-corrected";
 
 const ASSETS = [
   "./",

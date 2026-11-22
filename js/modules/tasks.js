@@ -369,6 +369,8 @@ export async function renderTasks(container) {
 
   const today = todayISO();
   const allOpenCount = tasks.filter(task => !task.done).length;
+  const todayOnlyCount = tasks.filter(task => !task.done && task.dueDate === today).length;
+  const lateOnlyCount = tasks.filter(task => !task.done && task.dueDate && task.dueDate < today).length;
   const focusCount = tasks.filter(task => !task.done && task.dueDate && task.dueDate <= today).length;
   const upcomingCount = tasks.filter(task => !task.done && !isAutomaticTask(task) && task.dueDate && task.dueDate > today).length;
   const inboxCount = tasks.filter(task => !task.done && !isAutomaticTask(task) && !task.dueDate).length;
@@ -385,62 +387,36 @@ export async function renderTasks(container) {
   const folderCount = folder => userOpenTasks.filter(task => sameTaskFolder(task.folder || DEFAULT_TASK_FOLDER, folder)).length;
 
   container.innerHTML = `
-    <section class="tasks-v32">
-      <div class="section-head">
+    <section class="tasks-v371">
+      <div class="tasks-v371-head">
         <div>
           <p class="eyebrow">ORGANISATION</p>
           <h2>Toutes les tâches</h2>
-          <p class="muted" style="margin:4px 0 0">
-            ${allOpenCount} ouvertes · ${focusCount} à traiter maintenant
-          </p>
+          <p>${allOpenCount} ouvertes · ${focusCount} à traiter maintenant</p>
         </div>
-
-        <button class="primary-btn" id="add-task">+ Tâche</button>
+        <button class="tasks-v371-add" id="add-task">＋</button>
       </div>
 
-      <section class="task-folders-panel">
-        <div class="task-folders-head">
-          <div>
-            <strong>Dossiers</strong>
-            <span>Range tes tâches comme dans une liste To Do.</span>
-          </div>
-          <div class="task-folders-actions">
-            <button class="ghost-btn" id="task-manage-folders">Gérer</button>
-            <button class="primary-btn" id="task-add-folder">+ Dossier</button>
-          </div>
-        </div>
-
-        <div class="task-folder-strip" aria-label="Dossiers de tâches">
-          <button class="task-folder-chip ${activeFolder === "all" ? "active" : ""}" data-task-folder="all">
-            Toutes <span>${userOpenTasks.length}</span>
-          </button>
-          ${taskFolders.map(folder => `
-            <button class="task-folder-chip ${activeFolder !== "all" && sameTaskFolder(activeFolder, folder) ? "active" : ""}" data-task-folder="${escapeHtml(folder)}">
-              📁 ${escapeHtml(folder)} <span>${folderCount(folder)}</span>
-            </button>
-          `).join("")}
-        </div>
-      </section>
-
-      <div class="task-overview task-overview-v32">
-        <article class="${focusCount ? "attention" : ""}">
-          <span>À traiter</span>
-          <strong>${focusCount}</strong>
-          <small>retard + aujourd'hui</small>
-        </article>
-        <article>
+      <div class="tasks-v371-summary" aria-label="Résumé des tâches">
+        <button class="tasks-v371-summary-card today ${activeFilter === "focus" ? "active" : ""}" data-summary-filter="focus">
+          <span>Aujourd’hui</span>
+          <strong>${todayOnlyCount}</strong>
+        </button>
+        <button class="tasks-v371-summary-card late ${activeFilter === "focus" ? "active" : ""}" data-summary-filter="focus">
+          <span>En retard</span>
+          <strong>${lateOnlyCount}</strong>
+        </button>
+        <button class="tasks-v371-summary-card upcoming ${activeFilter === "upcoming" ? "active" : ""}" data-summary-filter="upcoming">
           <span>À venir</span>
           <strong>${upcomingCount}</strong>
-          <small>avec une date future</small>
-        </article>
-        <article>
-          <span>Inbox</span>
-          <strong>${inboxCount}</strong>
-          <small>sans échéance</small>
-        </article>
+        </button>
+        <button class="tasks-v371-summary-card done ${activeFilter === "done" ? "active" : ""}" data-summary-filter="done">
+          <span>Terminées</span>
+          <strong>${doneCount}</strong>
+        </button>
       </div>
 
-      <nav class="task-primary-tabs" aria-label="Vues des tâches">
+      <nav class="task-primary-tabs tasks-v371-tabs" aria-label="Vues des tâches">
         <button class="${activeFilter === "all" ? "active" : ""}" data-filter="all">
           Toutes <span>${allOpenCount}</span>
         </button>
@@ -487,11 +463,12 @@ export async function renderTasks(container) {
         </div>
       ` : ""}
 
-      <div class="task-search-wrap">
-        <input id="task-search" type="search" value="${escapeHtml(taskSearch)}" placeholder="Rechercher dans cette vue…" autocomplete="off">
+      <div class="task-search-wrap tasks-v371-search">
+        <span>⌕</span>
+        <input id="task-search" type="search" value="${escapeHtml(taskSearch)}" placeholder="Rechercher une tâche…" autocomplete="off">
       </div>
 
-      <div class="task-view-heading">
+      <div class="task-view-heading tasks-v371-list-head">
         <div>
           <strong>${
             activeFilter === "all" ? "Toutes les tâches" :
@@ -506,7 +483,7 @@ export async function renderTasks(container) {
         </div>
       </div>
 
-      <div class="section list task-list-v32" id="task-list">
+      <div class="list task-list-v32 tasks-v371-list" id="task-list">
         ${
           visible.length
             ? visible.map(task => taskRow(task, objectiveMap, projectMap, assetMap, aquariumMap, plantMap, peopleMap)).join("")
@@ -514,11 +491,35 @@ export async function renderTasks(container) {
                 activeFilter === "all"
                   ? "Tout est fait. Aucune tâche ouverte."
                   : activeFilter === "focus"
-                    ? "Rien d'urgent. Les tâches sans date sont maintenant rangées dans « Sans date »."
+                    ? "Rien d'urgent."
                     : "Aucune tâche dans cette vue."
               }</div>`
         }
       </div>
+
+      <section class="task-folders-panel tasks-v371-folders">
+        <div class="task-folders-head">
+          <div>
+            <strong>Dossiers</strong>
+            <span>Range tes tâches sans masquer la vue principale.</span>
+          </div>
+          <div class="task-folders-actions">
+            <button class="ghost-btn" id="task-manage-folders">Gérer</button>
+            <button class="primary-btn" id="task-add-folder">+ Dossier</button>
+          </div>
+        </div>
+
+        <div class="task-folder-strip" aria-label="Dossiers de tâches">
+          <button class="task-folder-chip ${activeFolder === "all" ? "active" : ""}" data-task-folder="all">
+            Toutes <span>${userOpenTasks.length}</span>
+          </button>
+          ${taskFolders.map(folder => `
+            <button class="task-folder-chip ${activeFolder !== "all" && sameTaskFolder(activeFolder, folder) ? "active" : ""}" data-task-folder="${escapeHtml(folder)}">
+              📁 ${escapeHtml(folder)} <span>${folderCount(folder)}</span>
+            </button>
+          `).join("")}
+        </div>
+      </section>
     </section>
   `;
 
@@ -543,6 +544,13 @@ export async function renderTasks(container) {
     const next = container.querySelector("#task-search");
     next?.focus();
     next?.setSelectionRange(taskSearch.length, taskSearch.length);
+  });
+
+  container.querySelectorAll("[data-summary-filter]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      activeFilter = btn.dataset.summaryFilter;
+      await renderTasks(container);
+    });
   });
 
   container.querySelectorAll("[data-filter]").forEach(btn => {

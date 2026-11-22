@@ -709,3 +709,169 @@ html[data-theme="dark"] .badge.danger{background:rgba(239,68,68,.13);color:#feca
   .modules-v37-footer{padding:7px 9px 9px}
   .modules-v37-toggle{padding:6px 7px}
 }
+
+
+/* =========================================================
+   V33.7.1 — CORRECTION VISUELLE : DARK MODE RÉEL
+========================================================= */
+:root{
+  --bg:#f5f7fb;
+}
+html[data-theme="dark"]{
+  --bg:#090b12;
+}
+html[data-theme="light"]{
+  --bg:#f5f7fb;
+}
+html[data-theme="dark"],
+html[data-theme="dark"] body,
+html[data-theme="dark"] #app,
+html[data-theme="dark"] .view{
+  background:#090b12!important;
+  color:#f8fafc!important;
+}
+html[data-theme="dark"] #app{
+  background:
+    radial-gradient(circle at 10% 0%,rgba(128,45,230,.13),transparent 23%),
+    radial-gradient(circle at 92% 12%,rgba(27,103,214,.10),transparent 25%),
+    #090b12!important;
+}
+html[data-theme="dark"] .topbar{
+  background:rgba(9,11,18,.93)!important;
+  border-bottom:1px solid rgba(255,255,255,.055)!important;
+  box-shadow:none!important;
+  backdrop-filter:blur(24px) saturate(150%);
+}
+html[data-theme="dark"] .topbar h1{color:#fff}
+html[data-theme="dark"] .topbar .eyebrow{color:#a855f7}
+html[data-theme="dark"] .topbar-actions .icon-btn{
+  background:#151927!important;
+  color:#f8fafc!important;
+  border:1px solid #282d3d!important;
+}
+html[data-theme="dark"] .bottom-nav{
+  background:rgba(8,10,16,.96)!important;
+  border-color:#202533!important;
+  box-shadow:0 -12px 35px rgba(0,0,0,.36)!important;
+}
+html[data-theme="dark"] .nav-item.active:not(.nav-add){
+  background:#f5f7fb!important;
+  color:#111827!important;
+}
+html[data-theme="dark"] .nav-item.active:not(.nav-add)::before{
+  background:#111827!important;
+}
+html[data-theme="dark"] .nav-item:not(.active){color:#7d8495!important}
+
+/* Tâches proche du concept choisi */
+.tasks-v371{display:grid;gap:14px}
+.tasks-v371-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.tasks-v371-head .eyebrow{color:#a855f7;font-size:9px}
+.tasks-v371-head h2{
+  margin-top:3px;font-size:27px;letter-spacing:-.045em;color:var(--text)
+}
+.tasks-v371-head p:last-child{
+  margin:5px 0 0;color:var(--muted);font-size:10px
+}
+.tasks-v371-add{
+  width:46px;height:46px;display:grid;place-items:center;flex:0 0 46px;
+  border:0;border-radius:15px;background:linear-gradient(145deg,#9333ea,#c026d3);
+  color:#fff;font-size:26px;font-weight:500;box-shadow:0 10px 25px rgba(147,51,234,.25)
+}
+.tasks-v371-summary{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px
+}
+.tasks-v371-summary-card{
+  min-width:0;display:grid;gap:5px;text-align:left;padding:10px 8px;
+  border-radius:14px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);cursor:pointer
+}
+.tasks-v371-summary-card span{
+  font-size:8px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.tasks-v371-summary-card strong{font-size:18px}
+.tasks-v371-summary-card.today{border-color:rgba(147,51,234,.36);background:linear-gradient(145deg,rgba(147,51,234,.16),var(--surface))}
+.tasks-v371-summary-card.late{border-color:rgba(239,68,68,.34);background:linear-gradient(145deg,rgba(239,68,68,.14),var(--surface))}
+.tasks-v371-summary-card.upcoming{border-color:rgba(14,165,233,.34);background:linear-gradient(145deg,rgba(14,165,233,.13),var(--surface))}
+.tasks-v371-summary-card.done{border-color:rgba(34,197,94,.30);background:linear-gradient(145deg,rgba(34,197,94,.12),var(--surface))}
+.tasks-v371-tabs{margin-top:0}
+.tasks-v371-tabs button{
+  min-height:34px!important;padding:7px 10px!important;border-radius:11px!important;font-size:9px!important
+}
+.tasks-v371-search{
+  display:flex;align-items:center;gap:8px;margin:0!important;padding:0 11px;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px
+}
+.tasks-v371-search span{color:var(--muted);font-size:15px}
+.tasks-v371-search input{
+  border:0!important;background:transparent!important;padding:10px 0!important;min-height:42px!important
+}
+.tasks-v371-list-head{margin:2px 0 0}
+.tasks-v371-list{margin:0!important;gap:7px!important}
+.tasks-v371-list .list-item{
+  border-radius:14px!important;padding:11px!important;background:var(--surface)!important;
+  border:1px solid var(--border)!important
+}
+.tasks-v371-list .task-title{font-size:12px!important}
+.tasks-v371-list .task-meta{font-size:9px!important}
+.tasks-v371-folders{
+  margin-top:7px!important;background:var(--surface)!important;border-color:var(--border)!important;
+  box-shadow:none!important;border-radius:16px!important
+}
+.tasks-v371-folders .task-folders-head span{font-size:9px}
+.tasks-v371-folders .task-folder-chip{min-height:32px;padding:6px 9px;font-size:8px}
+
+/* Supprime les vieux blocs résumé qui pouvaient créer un mélange clair/sombre */
+.tasks-v371 .task-overview{display:none!important}
+
+/* Modules plus proches du mockup : vrais blocs colorés */
+html[data-theme="dark"] .modules-v36{color:#fff}
+html[data-theme="dark"] .modules-v36-section-head h3,
+html[data-theme="dark"] .modules-v36-section-head p{color:inherit}
+html[data-theme="dark"] .modules-v36-section-head p{color:#8f96a7}
+html[data-theme="dark"] .modules-v37-card{
+  background:
+    radial-gradient(circle at 105% 0%,rgba(var(--module-accent),.32),transparent 43%),
+    linear-gradient(145deg,rgba(var(--module-accent),.16),#11141e 68%)!important;
+  border-color:rgba(var(--module-accent),.34)!important;
+}
+html[data-theme="dark"] .modules-v37-open strong{color:#fff}
+html[data-theme="dark"] .modules-v37-open p,
+html[data-theme="dark"] .modules-v37-category{color:#9ca3b3}
+
+/* Dashboard : aucune carte blanche en mode sombre */
+html[data-theme="dark"] .dashboard-shell,
+html[data-theme="dark"] .dashboard-section,
+html[data-theme="dark"] .dashboard-section-head h2{color:#f8fafc!important}
+html[data-theme="dark"] .dashboard-glance-card,
+html[data-theme="dark"] .dashboard-alert,
+html[data-theme="dark"] .dashboard-timeline-item,
+html[data-theme="dark"] .dashboard-module,
+html[data-theme="dark"] .dashboard-empty-v27{
+  background:#11141e!important;color:#f8fafc!important;border-color:#252a39!important
+}
+html[data-theme="dark"] .dashboard-glance-card span,
+html[data-theme="dark"] .dashboard-glance-card small,
+html[data-theme="dark"] .dashboard-alert small,
+html[data-theme="dark"] .dashboard-timeline-main small,
+html[data-theme="dark"] .dashboard-module .sub,
+html[data-theme="dark"] .dashboard-section-head p{
+  color:#9299aa!important
+}
+html[data-theme="dark"] .dashboard-module{
+  background:
+    radial-gradient(circle at 105% -5%,rgba(var(--dash-tone),.28),transparent 43%),
+    linear-gradient(145deg,rgba(var(--dash-tone),.12),#11141e 68%)!important;
+  border-color:rgba(var(--dash-tone),.28)!important
+}
+
+@media(max-width:430px){
+  .view{padding:13px 15px 106px!important}
+  .topbar{padding-left:15px!important;padding-right:15px!important}
+  .tasks-v371-summary{gap:6px}
+  .tasks-v371-summary-card{padding:9px 7px}
+  .tasks-v371-summary-card strong{font-size:17px}
+  .tasks-v371-head h2{font-size:25px}
+}

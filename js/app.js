@@ -320,17 +320,17 @@ if ("serviceWorker" in navigator) {
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (reloadingForServiceWorker) return;
-    if (sessionStorage.getItem("myhub-sw-reloaded-v33.7") === "1") return;
+    if (sessionStorage.getItem("myhub-sw-reloaded-v33.7.1") === "1") return;
 
     reloadingForServiceWorker = true;
-    sessionStorage.setItem("myhub-sw-reloaded-v33.7", "1");
+    sessionStorage.setItem("myhub-sw-reloaded-v33.7.1", "1");
     window.location.reload();
   });
 
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(
-        "./service-worker.js?v=33.7",
+        "./service-worker.js?v=33.7.1",
         { updateViaCache: "none" }
       );
 
