@@ -1,3 +1,7 @@
+# MyHub V33.8 — Langage visuel commun des modules
+
+Cette version harmonise Badgeuse, Sport, Tracker et Réglages autour d’une base sombre commune. Le cyan devient l’identité générale de MyHub, tandis que chaque module conserve une couleur propre et que les statuts restent multicolores.
+
 # MyHub V33.6 — Modules progressifs
 
 MyHub fonctionne désormais avec un noyau réduit et une bibliothèque de modules activables à la demande. Désactiver un module ne supprime aucune donnée.

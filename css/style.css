@@ -875,3 +875,226 @@ html[data-theme="dark"] .dashboard-module{
   .tasks-v371-summary-card strong{font-size:17px}
   .tasks-v371-head h2{font-size:25px}
 }
+
+
+/* =========================================================
+   V33.8 — LANGAGE VISUEL COMMUN DES MODULES
+   Base sombre + cyan MyHub + accents propres à chaque module
+========================================================= */
+html[data-theme="dark"][data-route="timeclock"]{
+  --accent:#22d3ee; --accent-2:#0ea5e9; --accent-soft:rgba(34,211,238,.14);
+}
+html[data-theme="dark"][data-route="sport"]{
+  --accent:#34d399; --accent-2:#22c55e; --accent-soft:rgba(52,211,153,.14);
+}
+html[data-theme="dark"][data-route="tracker"]{
+  --accent:#2dd4bf; --accent-2:#06b6d4; --accent-soft:rgba(45,212,191,.14);
+}
+html[data-theme="dark"][data-route="settings"]{
+  --accent:#f59e0b; --accent-2:#fb923c; --accent-soft:rgba(245,158,11,.14);
+}
+html[data-theme="dark"][data-route="modules"],
+html[data-theme="dark"][data-route="dashboard"]{
+  --accent:#22d3ee; --accent-2:#0ea5e9; --accent-soft:rgba(34,211,238,.14);
+}
+
+/* Header: marque MyHub plus neutre, accent route */
+html[data-theme="dark"][data-route] .topbar .eyebrow{color:var(--accent)}
+html[data-theme="dark"][data-route] .topbar-actions .icon-btn{
+  border-color:color-mix(in srgb,var(--accent) 18%,#282d3d)!important;
+}
+html[data-theme="dark"][data-route] .primary-btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 25%,transparent);
+}
+
+/* Structure commune */
+html[data-theme="dark"] .module-generic-card,
+html[data-theme="dark"] .timeclock-card,
+html[data-theme="dark"] .timeclock-punch-card,
+html[data-theme="dark"] .sport-card,
+html[data-theme="dark"] .sport-load-card,
+html[data-theme="dark"] .tracker-category,
+html[data-theme="dark"] .tracker-week-focus,
+html[data-theme="dark"] .tracker-settings-card,
+html[data-theme="dark"] .setting-card{
+  background:linear-gradient(145deg,#121722,#0f131d)!important;
+  border:1px solid #293142!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.17)!important;
+  color:#f8fafc;
+}
+html[data-theme="dark"] .timeclock-card h3,
+html[data-theme="dark"] .sport-section-head h2,
+html[data-theme="dark"] .tracker-category h3,
+html[data-theme="dark"] .setting-card strong{color:#f8fafc}
+html[data-theme="dark"] .timeclock-card p,
+html[data-theme="dark"] .sport-section-head p,
+html[data-theme="dark"] .tracker-item-type,
+html[data-theme="dark"] .setting-card .muted{color:#98a2b3!important}
+
+/* Réglages : présentation plus homogène et moins violette */
+.settings-v338{display:grid;gap:14px}
+.settings-v338-head{margin-bottom:0}
+.settings-v338-head h2{font-size:26px;letter-spacing:-.04em}
+html[data-theme="dark"] .settings-version-card{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(34,211,238,.16),transparent 42%),
+    linear-gradient(145deg,#121722,#0f131d)!important;
+  border:1px solid #293142!important;
+}
+html[data-theme="dark"] .settings-version-eyebrow{color:#67e8f9!important}
+html[data-theme="dark"] .settings-version-badge{
+  color:#a5f3fc!important;background:rgba(34,211,238,.10)!important;
+  border:1px solid rgba(34,211,238,.16)
+}
+html[data-theme="dark"] .theme-choice.active{
+  border-color:#22d3ee!important;
+  box-shadow:0 0 0 2px rgba(34,211,238,.12)!important
+}
+html[data-theme="dark"] .settings-update-status.current{
+  background:rgba(52,211,153,.12)!important;color:#86efac!important
+}
+html[data-theme="dark"] .settings-update-status.available{
+  background:rgba(245,158,11,.14)!important;color:#fbbf24!important
+}
+
+/* Badgeuse : cyan + vert + orange */
+html[data-theme="dark"] .timeclock-module{gap:12px}
+html[data-theme="dark"] .timeclock-hero{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(34,211,238,.28),transparent 42%),
+    linear-gradient(145deg,#0d2530,#101722)!important;
+  border:1px solid rgba(34,211,238,.28);
+}
+html[data-theme="dark"] .timeclock-hero.working{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(52,211,153,.26),transparent 42%),
+    linear-gradient(145deg,#10281f,#101722)!important;
+  border-color:rgba(52,211,153,.28)
+}
+html[data-theme="dark"] .timeclock-hero.paused{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(245,158,11,.24),transparent 42%),
+    linear-gradient(145deg,#2b2110,#101722)!important;
+  border-color:rgba(245,158,11,.25)
+}
+html[data-theme="dark"] .timeclock-summary-grid article{
+  border:1px solid #293142!important;background:#111722!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.14)
+}
+html[data-theme="dark"] .timeclock-summary-grid article:nth-child(1){
+  border-color:rgba(34,211,238,.28)!important;
+  background:linear-gradient(145deg,rgba(34,211,238,.10),#111722)!important
+}
+html[data-theme="dark"] .timeclock-summary-grid article:nth-child(2){
+  border-color:rgba(52,211,153,.25)!important;
+  background:linear-gradient(145deg,rgba(52,211,153,.08),#111722)!important
+}
+html[data-theme="dark"] .timeclock-summary-grid article:nth-child(3){
+  border-color:rgba(245,158,11,.25)!important;
+  background:linear-gradient(145deg,rgba(245,158,11,.08),#111722)!important
+}
+html[data-theme="dark"] .timeclock-punch-btn{
+  background:linear-gradient(135deg,#22d3ee,#0ea5e9)!important;color:#051016!important
+}
+html[data-theme="dark"] .timeclock-punch-btn.pause{
+  background:linear-gradient(135deg,#fbbf24,#f97316)!important;color:#1f1400!important
+}
+html[data-theme="dark"] .timeclock-punch-btn.resume{
+  background:linear-gradient(135deg,#34d399,#22c55e)!important;color:#03150c!important
+}
+html[data-theme="dark"] .timeclock-timeline-row{background:#171d29!important}
+html[data-theme="dark"] .timeclock-timeline-icon{background:#202838!important}
+
+/* Sport : gabarit commun, accent vert mais sous-actions multicolores */
+html[data-theme="dark"] .sport-shell{color:#f8fafc}
+html[data-theme="dark"] .sport-tabs{
+  background:#0e131c!important;border:1px solid #252d3b!important
+}
+html[data-theme="dark"] .sport-tab{color:#8e97aa!important}
+html[data-theme="dark"] .sport-tab.active{
+  background:linear-gradient(135deg,#34d399,#22c55e)!important;color:#04130b!important
+}
+html[data-theme="dark"] .sport-hero{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(52,211,153,.25),transparent 43%),
+    linear-gradient(145deg,#10281f,#101722)!important;
+  border:1px solid rgba(52,211,153,.28)!important;
+  box-shadow:0 14px 32px rgba(0,0,0,.18)!important
+}
+html[data-theme="dark"] .sport-actions{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important
+}
+html[data-theme="dark"] .sport-action-card{
+  min-height:132px!important;background:#111722!important;color:#f8fafc!important;
+  border:1px solid #293142!important;box-shadow:0 10px 24px rgba(0,0,0,.14)!important
+}
+html[data-theme="dark"] .sport-action-card:first-child{
+  border-color:rgba(52,211,153,.28)!important;
+  background:linear-gradient(145deg,rgba(52,211,153,.12),#111722)!important
+}
+html[data-theme="dark"] .sport-action-card:nth-child(2){
+  border-color:rgba(14,165,233,.28)!important;
+  background:linear-gradient(145deg,rgba(14,165,233,.12),#111722)!important
+}
+html[data-theme="dark"] .sport-history-row{
+  background:#111722!important;border:1px solid #293142!important;color:#f8fafc!important
+}
+html[data-theme="dark"] .sport-history-row:nth-child(3n+1){border-left:3px solid #34d399!important}
+html[data-theme="dark"] .sport-history-row:nth-child(3n+2){border-left:3px solid #22d3ee!important}
+html[data-theme="dark"] .sport-history-row:nth-child(3n){border-left:3px solid #f59e0b!important}
+
+/* Tracker : turquoise principal, réponses statutées */
+html[data-theme="dark"] .tracker-shell{color:#f8fafc}
+html[data-theme="dark"] .tracker-tabs{
+  background:#0e131c!important;border:1px solid #252d3b!important
+}
+html[data-theme="dark"] .tracker-tab{color:#8e97aa!important}
+html[data-theme="dark"] .tracker-tab.active{
+  background:linear-gradient(135deg,#2dd4bf,#06b6d4)!important;color:#031312!important
+}
+html[data-theme="dark"] .tracker-datebar,
+html[data-theme="dark"] .tracker-score{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(45,212,191,.19),transparent 42%),
+    linear-gradient(145deg,#111a21,#101722)!important;
+  border:1px solid rgba(45,212,191,.24)!important
+}
+html[data-theme="dark"] .tracker-progress{background:#293142!important}
+html[data-theme="dark"] .tracker-progress i{
+  background:linear-gradient(90deg,#2dd4bf,#22c55e)!important
+}
+html[data-theme="dark"] .tracker-focus{
+  background:#111722!important;border:1px solid #293142!important;color:#98a2b3!important
+}
+html[data-theme="dark"] .tracker-focus.active{
+  color:#021512!important;background:linear-gradient(135deg,#2dd4bf,#22d3ee)!important;
+  border-color:transparent!important
+}
+html[data-theme="dark"] .tracker-item{
+  background:#111722!important;border:1px solid #293142!important;color:#f8fafc!important
+}
+html[data-theme="dark"] .tracker-item.essential{
+  border-color:rgba(245,158,11,.28)!important;
+  background:linear-gradient(145deg,rgba(245,158,11,.07),#111722)!important
+}
+html[data-theme="dark"] .tracker-choice button{
+  background:#1a2130!important;color:#9ca3af!important;border-color:#31394b!important
+}
+html[data-theme="dark"] .tracker-choice button.active-yes{
+  background:rgba(52,211,153,.17)!important;color:#86efac!important;border-color:rgba(52,211,153,.3)!important
+}
+html[data-theme="dark"] .tracker-choice button.active-no{
+  background:rgba(251,113,133,.15)!important;color:#fda4af!important;border-color:rgba(251,113,133,.28)!important
+}
+html[data-theme="dark"] .tracker-choice button.active-na{
+  background:rgba(148,163,184,.12)!important;color:#cbd5e1!important
+}
+
+/* Mobile : densité similaire au mockup retenu */
+@media(max-width:430px){
+  html[data-theme="dark"] .sport-action-card{min-height:118px!important;padding:12px!important}
+  html[data-theme="dark"] .timeclock-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  html[data-theme="dark"] .timeclock-summary-grid article{padding:10px!important}
+  html[data-theme="dark"] .timeclock-summary-grid article strong{font-size:14px!important}
+}

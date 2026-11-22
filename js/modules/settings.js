@@ -153,8 +153,8 @@ export async function renderSettings(container) {
     : `<span class="backup-status success">✓ Sauvegarde récente</span>`;
 
   container.innerHTML = `
-    <section>
-      <div class="section-head">
+    <section class="settings-v338">
+      <div class="section-head settings-v338-head">
         <div>
           <h2>Réglages</h2>
           <p class="muted" style="margin:4px 0 0">Tes données restent sur cet appareil.</p>
