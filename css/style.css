@@ -1098,3 +1098,209 @@ html[data-theme="dark"] .tracker-choice button.active-na{
   html[data-theme="dark"] .timeclock-summary-grid article{padding:10px!important}
   html[data-theme="dark"] .timeclock-summary-grid article strong{font-size:14px!important}
 }
+
+
+/* =========================================================
+   V33.8.1 — CORRECTION LISIBILITÉ / CONTRASTES
+========================================================= */
+html[data-theme="dark"]{
+  --field-bg:#141a24;
+  --field-bg-soft:#18202c;
+  --field-text:#f8fafc;
+  --field-muted:#a7b0c0;
+  --field-border:#2b3445;
+  --field-placeholder:#7f899a;
+}
+
+/* Règle globale : aucun champ clair en mode sombre */
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select{
+  background:var(--field-bg)!important;
+  color:var(--field-text)!important;
+  border-color:var(--field-border)!important;
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder{
+  color:var(--field-placeholder)!important;
+  opacity:1!important;
+}
+html[data-theme="dark"] select option{
+  background:#141a24!important;
+  color:#f8fafc!important;
+}
+
+/* Boutons secondaires : lisibles partout */
+html[data-theme="dark"] .ghost-btn,
+html[data-theme="dark"] .icon-btn{
+  background:#171d29!important;
+  color:#f8fafc!important;
+  border-color:#2b3445!important;
+}
+html[data-theme="dark"] .ghost-btn:disabled,
+html[data-theme="dark"] .icon-btn:disabled{
+  color:#717b8e!important;
+  opacity:.65!important;
+}
+
+/* Onglets : plus aucun fond blanc */
+html[data-theme="dark"] .sport-tab,
+html[data-theme="dark"] .tracker-tab,
+html[data-theme="dark"] .task-primary-tabs button,
+html[data-theme="dark"] .task-linked-filters button,
+html[data-theme="dark"] .task-folder-chip{
+  background:#141a24!important;
+  color:#9ba5b7!important;
+  border:1px solid #2b3445!important;
+}
+html[data-theme="dark"] .sport-tab.active,
+html[data-theme="dark"] .tracker-tab.active,
+html[data-theme="dark"] .task-primary-tabs button.active,
+html[data-theme="dark"] .task-linked-filters button.active,
+html[data-theme="dark"] .task-folder-chip.active{
+  color:#041014!important;
+  border-color:transparent!important;
+}
+
+/* Sport : toutes les sous-cartes deviennent sombres et lisibles */
+html[data-theme="dark"] .sport-load-card,
+html[data-theme="dark"] .sport-load-grid > div,
+html[data-theme="dark"] .sport-action-card,
+html[data-theme="dark"] .sport-card,
+html[data-theme="dark"] .sport-history-row,
+html[data-theme="dark"] .sport-empty,
+html[data-theme="dark"] .sport-sync,
+html[data-theme="dark"] .sport-record-card,
+html[data-theme="dark"] .sport-progress-card,
+html[data-theme="dark"] .sport-program-card,
+html[data-theme="dark"] .sport-plan-card,
+html[data-theme="dark"] .sport-workout-card{
+  background:#111722!important;
+  color:#f8fafc!important;
+  border-color:#2b3445!important;
+}
+html[data-theme="dark"] .sport-load-grid > div{
+  min-height:auto!important;
+}
+html[data-theme="dark"] .sport-load-grid span,
+html[data-theme="dark"] .sport-load-grid small,
+html[data-theme="dark"] .sport-history-main small,
+html[data-theme="dark"] .sport-action-card small,
+html[data-theme="dark"] .sport-card .muted,
+html[data-theme="dark"] .sport-sync,
+html[data-theme="dark"] .sport-section-head p{
+  color:#a7b0c0!important;
+}
+html[data-theme="dark"] .sport-load-grid strong,
+html[data-theme="dark"] .sport-history-main strong,
+html[data-theme="dark"] .sport-action-card strong,
+html[data-theme="dark"] .sport-card strong{
+  color:#f8fafc!important;
+}
+html[data-theme="dark"] .sport-load-grid > div:nth-child(1){
+  background:linear-gradient(145deg,rgba(34,211,238,.09),#111722)!important;
+  border:1px solid rgba(34,211,238,.22)!important;
+}
+html[data-theme="dark"] .sport-load-grid > div:nth-child(2){
+  background:linear-gradient(145deg,rgba(59,130,246,.10),#111722)!important;
+  border:1px solid rgba(59,130,246,.22)!important;
+}
+html[data-theme="dark"] .sport-load-grid > div:nth-child(3){
+  background:linear-gradient(145deg,rgba(52,211,153,.09),#111722)!important;
+  border:1px solid rgba(52,211,153,.22)!important;
+}
+
+/* Tracker : champs et cartes cohérents */
+html[data-theme="dark"] .tracker-item,
+html[data-theme="dark"] .tracker-category,
+html[data-theme="dark"] .tracker-history-row,
+html[data-theme="dark"] .tracker-settings-card,
+html[data-theme="dark"] .tracker-empty,
+html[data-theme="dark"] .tracker-week-focus{
+  background:#111722!important;
+  color:#f8fafc!important;
+  border-color:#2b3445!important;
+}
+html[data-theme="dark"] .tracker-item-type,
+html[data-theme="dark"] .tracker-auto-source,
+html[data-theme="dark"] .tracker-history-row small,
+html[data-theme="dark"] .tracker-empty p,
+html[data-theme="dark"] .tracker-week-focus small{
+  color:#a7b0c0!important;
+}
+html[data-theme="dark"] .tracker-value-row input,
+html[data-theme="dark"] .tracker-value-row textarea{
+  background:#141a24!important;
+  color:#f8fafc!important;
+  border-color:#2b3445!important;
+}
+
+/* Badgeuse : champs + lignes */
+html[data-theme="dark"] .timeclock-punch-card,
+html[data-theme="dark"] .timeclock-card,
+html[data-theme="dark"] .timeclock-history-row,
+html[data-theme="dark"] .timeclock-label-summary > div,
+html[data-theme="dark"] .timeclock-timeline-row,
+html[data-theme="dark"] .timeclock-local-note{
+  background:#111722!important;
+  color:#f8fafc!important;
+  border-color:#2b3445!important;
+}
+html[data-theme="dark"] .timeclock-section-head p,
+html[data-theme="dark"] .timeclock-history-row small,
+html[data-theme="dark"] .timeclock-current small,
+html[data-theme="dark"] .timeclock-local-note p,
+html[data-theme="dark"] .timeclock-label-summary span{
+  color:#a7b0c0!important;
+}
+html[data-theme="dark"] #timeclock-label{
+  background:#141a24!important;
+  color:#f8fafc!important;
+}
+
+/* Réglages : textes et select lisibles */
+html[data-theme="dark"] .setting-card,
+html[data-theme="dark"] .settings-update-box,
+html[data-theme="dark"] .backup-last,
+html[data-theme="dark"] .backup-history-row,
+html[data-theme="dark"] .backup-preview-grid article{
+  background:#111722!important;
+  color:#f8fafc!important;
+  border-color:#2b3445!important;
+}
+html[data-theme="dark"] .setting-card p,
+html[data-theme="dark"] .backup-last span,
+html[data-theme="dark"] .backup-last small,
+html[data-theme="dark"] .backup-history-row small,
+html[data-theme="dark"] .settings-update-line span{
+  color:#a7b0c0!important;
+}
+html[data-theme="dark"] .backup-reminder-row select{
+  background:#141a24!important;
+  color:#f8fafc!important;
+  border-color:#2b3445!important;
+}
+
+/* Empêche les anciennes classes "fond clair" de ressortir */
+html[data-theme="dark"] .surface-light,
+html[data-theme="dark"] .card-light,
+html[data-theme="dark"] .panel-light{
+  background:#111722!important;
+  color:#f8fafc!important;
+}
+
+/* Liens / petits textes */
+html[data-theme="dark"] a,
+html[data-theme="dark"] button{
+  -webkit-tap-highlight-color:transparent;
+}
+html[data-theme="dark"] .muted{
+  color:#a7b0c0!important;
+}
+
+@media(max-width:430px){
+  html[data-theme="dark"] .sport-load-grid > div{
+    padding:11px!important;
+    border-radius:13px!important;
+  }
+}

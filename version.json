@@ -1,6 +1,6 @@
 {
-  "version": "V33.8",
+  "version": "V33.8.1",
   "date": "22 novembre 2026",
-  "title": "Langage visuel commun des modules",
-  "summary": "Badgeuse, Sport, Tracker et Réglages harmonisés avec une base sombre, cyan MyHub et accents multicolores."
+  "title": "Correction de lisibilité",
+  "summary": "Suppression des zones blanches résiduelles et amélioration des contrastes en mode sombre."
 }

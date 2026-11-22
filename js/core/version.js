@@ -1,18 +1,17 @@
-export const APP_VERSION = "V33.8";
+export const APP_VERSION = "V33.8.1";
 
 export const RELEASE_INFO = {
   version: APP_VERSION,
   date: "22 novembre 2026",
-  title: "Langage visuel commun des modules",
-  summary: "Badgeuse, Sport, Tracker et Réglages adoptent un gabarit visuel cohérent, sombre et multicolore, sans violet dominant.",
+  title: "Correction de lisibilité",
+  summary: "Les zones claires et les textes invisibles du mode sombre ont été corrigés sur les principaux modules.",
   details: [
-    "Le cyan devient la couleur d’identité générale de MyHub sur les écrans principaux.",
-    "Chaque module garde sa propre couleur d’accent : Badgeuse cyan, Sport vert, Tracker turquoise et Réglages ambre.",
-    "Les couleurs secondaires restent fonctionnelles : vert pour le positif, orange pour les échéances, rouge/corail pour les alertes.",
-    "La Badgeuse reçoit des cartes de synthèse multicolores et un pointage plus visuel.",
-    "Sport adopte des cartes d’action et d’historique cohérentes avec le nouveau gabarit.",
-    "Tracker harmonise score, filtres et habitudes avec une identité turquoise.",
-    "Réglages abandonne le violet dominant au profit d’un rendu sombre plus neutre.",
-    "Le changement de module adapte automatiquement les variables visuelles via la route active."
+    "Suppression des champs blancs restants en mode sombre.",
+    "Correction des textes blancs sur fonds clairs.",
+    "Correction des placeholders et textes secondaires trop pâles.",
+    "Onglets Sport, Tracker et filtres harmonisés en sombre.",
+    "Sous-cartes Course, Natation et Volume muscu converties en cartes sombres colorées.",
+    "Amélioration du contraste dans Badgeuse, Tracker et Réglages.",
+    "Uniformisation des champs input, textarea et select en mode sombre."
   ]
 };
