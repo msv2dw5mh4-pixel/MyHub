@@ -1,3 +1,7 @@
+# MyHub V33.9 — Tâches, Dashboard et Modules
+
+Cette version termine l’harmonisation des trois écrans centraux autour du langage visuel sombre, multicolore et sans violet dominant.
+
 # MyHub V33.8 — Langage visuel commun des modules
 
 Cette version harmonise Badgeuse, Sport, Tracker et Réglages autour d’une base sombre commune. Le cyan devient l’identité générale de MyHub, tandis que chaque module conserve une couleur propre et que les statuts restent multicolores.

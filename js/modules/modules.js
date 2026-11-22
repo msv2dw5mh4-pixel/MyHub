@@ -51,8 +51,8 @@ export async function renderModules(container) {
       <div class="modules-v36-hero">
         <div>
           <p class="eyebrow">MYHUB MODULAIRE</p>
-          <h2>Active seulement ce que tu utilises</h2>
-          <p>Commence léger puis ajoute les modules au fur et à mesure. Désactiver un module ne supprime jamais ses données.</p>
+          <h2>Construis ton MyHub à ton rythme</h2>
+          <p>Active les outils dont tu as besoin aujourd’hui. Le reste reste disponible dans ta bibliothèque.</p>
         </div>
         <div class="modules-v36-count"><strong>${activeModules.length}</strong><span>modules actifs</span></div>
       </div>

@@ -1,6 +1,6 @@
 {
-  "version": "V33.8.1",
+  "version": "V33.9",
   "date": "22 novembre 2026",
-  "title": "Correction de lisibilité",
-  "summary": "Suppression des zones blanches résiduelles et amélioration des contrastes en mode sombre."
+  "title": "Finition Tâches, Dashboard et Modules",
+  "summary": "Harmonisation visuelle des trois écrans centraux de MyHub."
 }

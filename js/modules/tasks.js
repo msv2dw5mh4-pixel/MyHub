@@ -468,7 +468,7 @@ export async function renderTasks(container) {
         <input id="task-search" type="search" value="${escapeHtml(taskSearch)}" placeholder="Rechercher une tâche…" autocomplete="off">
       </div>
 
-      <div class="task-view-heading tasks-v371-list-head">
+      <div class="task-view-heading tasks-v371-list-head tasks-v39-list-head">
         <div>
           <strong>${
             activeFilter === "all" ? "Toutes les tâches" :
@@ -497,7 +497,7 @@ export async function renderTasks(container) {
         }
       </div>
 
-      <section class="task-folders-panel tasks-v371-folders">
+      <section class="task-folders-panel tasks-v371-folders tasks-v39-folders">
         <div class="task-folders-head">
           <div>
             <strong>Dossiers</strong>

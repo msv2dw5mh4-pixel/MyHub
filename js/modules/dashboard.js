@@ -393,6 +393,7 @@ export async function renderDashboard(container) {
     <section class="dashboard-shell">
       <div class="dashboard-hero-v27">
         <div class="dashboard-hero-copy">
+          <p class="dashboard-kicker">VUE D’ENSEMBLE</p>
           <p class="date">${today}</p>
           <div class="dashboard-hero-line">
             <h2>${planning.today ? `${planning.today} élément${planning.today > 1 ? "s" : ""} aujourd'hui` : "Rien d'urgent aujourd'hui"}</h2>
@@ -407,22 +408,22 @@ export async function renderDashboard(container) {
       </div>
 
       <section class="dashboard-glance" aria-label="Résumé du jour">
-        <article data-route="tasks" class="dashboard-glance-card ${tasks.late ? "danger" : ""}">
+        <article data-route="tasks" class="dashboard-glance-card dashboard-glance-tasks ${tasks.late ? "danger" : ""}">
           <span>✓ Tâches</span>
           <strong>${tasks.late ? `${tasks.late} retard${tasks.late > 1 ? "s" : ""}` : `${tasks.dueToday} aujourd'hui`}</strong>
           <small>${tasks.open} ouvertes</small>
         </article>
-        <article data-route="tracker" class="dashboard-glance-card">
+        <article data-route="tracker" class="dashboard-glance-card dashboard-glance-tracker">
           <span>✅ Tracker</span>
           <strong>${tracker.configured && tracker.score !== null ? `${tracker.score} %` : "À remplir"}</strong>
           <small>${tracker.essentialTotal ? `⭐ ${tracker.essentialScore ?? "—"} % essentiel` : `Objectif ${tracker.goal ?? "—"} %`}</small>
         </article>
-        <article data-route="sport" class="dashboard-glance-card">
+        <article data-route="sport" class="dashboard-glance-card dashboard-glance-sport">
           <span>🏋️ Sport</span>
           <strong>${sport.countWeek} cette semaine</strong>
           <small>${sport.nextPlannedLabel ? sport.nextPlannedLabel : (sport.latestLabel || "Aucune activité")}</small>
         </article>
-        <article data-route="budget" class="dashboard-glance-card">
+        <article data-route="budget" class="dashboard-glance-card dashboard-glance-budget">
           <span>💰 Budget</span>
           <strong>${formatSignedMoney(budget.available)}</strong>
           <small>disponible ce mois</small>

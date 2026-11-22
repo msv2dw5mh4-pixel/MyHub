@@ -87,3 +87,10 @@
 .dashboard-tone-stats{--dash-tone:168,85,247}
 html[data-theme="dark"] .dashboard-hero-v27 .date,
 html[data-theme="dark"] .dashboard-hero-v27 p:last-child{color:#adb5c6}
+
+
+/* V33.9 — densité dashboard */
+.dashboard-kicker{margin:0 0 4px;font-size:8px;font-weight:900;letter-spacing:.14em}
+.dashboard-glance-card{display:flex;flex-direction:column;justify-content:center}
+.dashboard-module-grid-v27 .dashboard-module{display:flex;flex-direction:column}
+.dashboard-module-grid-v27 .dashboard-module .sub{margin-top:auto;padding-top:4px}
