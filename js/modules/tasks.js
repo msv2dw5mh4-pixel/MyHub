@@ -30,6 +30,7 @@ import { skipSportPlanTask, syncSportPlanTasks } from "../core/sport_planner.js"
 import { completeLivingCareTask, syncLivingCareTasks, skipLivingCareTask } from "../core/living_tasks.js";
 import { dismissPeopleReminderTask, syncPeopleReminderTasks } from "../core/people_tasks.js";
 import { getTaskFolders, createTaskFolder, renameTaskFolder, deleteTaskFolder, ensureTaskFolder, sameTaskFolder, DEFAULT_TASK_FOLDER } from "../core/task_folders.js";
+import { getModuleActivationState } from "../core/modules.js";
 
 let activeFilter = "focus";
 let linkedFilter = "all";
@@ -55,6 +56,22 @@ function taskState(task) {
   if (task.dueDate === today) return "today";
 
   return "upcoming";
+}
+
+function taskSourceModuleId(task) {
+  const source = task?.source;
+  if (["objective-recurring", "objective-milestone"].includes(source)) return "objectives";
+  if (source === "maintenance") return "maintenance";
+  if (source === "document") return "documents";
+  if (source === "sport-plan") return "sport";
+  if (source === "living-care") return "living";
+  if (source === "people-reminder") return "people";
+  return null;
+}
+
+function taskAllowedByModules(task, activeModuleIds) {
+  const moduleId = taskSourceModuleId(task);
+  return !moduleId || activeModuleIds.has(moduleId);
 }
 
 function isAutomaticTask(task) {
@@ -318,11 +335,13 @@ function taskRow(task, objectiveMap, projectMap, assetMap, aquariumMap, plantMap
 }
 
 export async function renderTasks(container) {
-  await syncRecurringObjectiveTasks(7);
-  await syncDocumentTasks();
-  await syncSportPlanTasks();
-  await syncLivingCareTasks();
-  await syncPeopleReminderTasks();
+  const moduleActivation = await getModuleActivationState();
+  const activeModuleIds = new Set(moduleActivation.activeIds);
+  if (activeModuleIds.has("objectives")) await syncRecurringObjectiveTasks(7);
+  if (activeModuleIds.has("documents")) await syncDocumentTasks();
+  if (activeModuleIds.has("sport")) await syncSportPlanTasks();
+  if (activeModuleIds.has("living")) await syncLivingCareTasks();
+  if (activeModuleIds.has("people")) await syncPeopleReminderTasks();
 
   const [tasksRaw, objectives, projects, assets, aquariums, plants, people, taskFolders] = await Promise.all([
     getAll("tasks"),
@@ -335,7 +354,7 @@ export async function renderTasks(container) {
     getTaskFolders()
   ]);
 
-  const tasks = sortTasks(tasksRaw);
+  const tasks = sortTasks(tasksRaw.filter(task => taskAllowedByModules(task, activeModuleIds)));
   const objectiveMap = new Map(objectives.map(o => [o.id, o]));
   const projectMap = new Map(projects.map(p => [p.id, p]));
   const assetMap = new Map(assets.map(a => [a.id, a]));
@@ -917,12 +936,14 @@ export function requestTaskView(view = "focus") {
 }
 
 export async function getTasksSummary() {
-  await syncRecurringObjectiveTasks(30);
-  await syncDocumentTasks();
-  await syncLivingCareTasks();
-  await syncPeopleReminderTasks();
+  const moduleActivation = await getModuleActivationState();
+  const activeModuleIds = new Set(moduleActivation.activeIds);
+  if (activeModuleIds.has("objectives")) await syncRecurringObjectiveTasks(30);
+  if (activeModuleIds.has("documents")) await syncDocumentTasks();
+  if (activeModuleIds.has("living")) await syncLivingCareTasks();
+  if (activeModuleIds.has("people")) await syncPeopleReminderTasks();
 
-  const tasks = await getAll("tasks");
+  const tasks = (await getAll("tasks")).filter(task => taskAllowedByModules(task, activeModuleIds));
   const today = todayISO();
   const open = tasks.filter(t => !t.done);
   const personalOpen = open.filter(t => t.source !== "sport-plan");

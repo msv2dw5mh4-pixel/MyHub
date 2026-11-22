@@ -1,6 +1,6 @@
 {
-  "version": "V33.4",
-  "date": "11 novembre 2026",
-  "title": "Mises à jour intégrées à MyHub",
-  "summary": "MyHub peut maintenant détecter une nouvelle version et proposer sa mise à jour directement dans l’application."
+  "version": "V33.6",
+  "date": "22 novembre 2026",
+  "title": "MyHub modulaire et progressif",
+  "summary": "Active uniquement les modules utiles et ajoute les autres au fur et à mesure."
 }

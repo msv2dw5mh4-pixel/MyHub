@@ -1,17 +1,17 @@
-export const APP_VERSION = "V33.4";
+export const APP_VERSION = "V33.6";
 
 export const RELEASE_INFO = {
   version: APP_VERSION,
-  date: "11 novembre 2026",
-  title: "Mises à jour intégrées à MyHub",
-  summary: "MyHub détecte maintenant les nouvelles versions disponibles sur GitHub Pages et peut lancer la mise à jour directement depuis l’application.",
+  date: "22 novembre 2026",
+  title: "MyHub modulaire et progressif",
+  summary: "MyHub démarre maintenant avec un noyau léger et permet d’activer les autres modules uniquement au fur et à mesure des besoins.",
   details: [
-    "Ajout d’un fichier version.json lu sans cache pour connaître la dernière version disponible.",
-    "Ajout d’un état « Version installée / Dernière version disponible » dans les Réglages.",
-    "Ajout d’un bouton « Vérifier les mises à jour ».",
-    "Lorsqu’une version plus récente existe, un bouton « Mettre à jour MyHub » apparaît.",
-    "Une bannière de mise à jour peut également apparaître automatiquement à l’ouverture de MyHub.",
-    "La mise à jour demande au Service Worker de récupérer les nouveaux fichiers, de s’activer puis recharge MyHub avec une URL unique pour contourner le cache iOS.",
-    "Aucune donnée IndexedDB n’est supprimée ou réinitialisée par ce mécanisme."
+    "Noyau toujours actif : Tâches, Tracker, Sport et Badgeuse, avec Dashboard et Réglages toujours disponibles.",
+    "Nouvelle bibliothèque de modules avec activation à la demande.",
+    "Un module désactivé disparaît de l’interface mais toutes ses données locales sont conservées.",
+    "Les modules non actifs disparaissent du Dashboard, de la recherche globale et de l’ajout rapide.",
+    "Les synchronisations automatiques des modules désactivés ne tournent plus en arrière-plan.",
+    "Les tâches automatiques provenant de modules désactivés sont masquées jusqu’à leur réactivation.",
+    "La configuration des modules est sauvegardée avec le reste de MyHub."
   ]
 };

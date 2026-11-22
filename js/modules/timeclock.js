@@ -119,6 +119,67 @@ function segmentsOverlap(aStart, aEnd, bStart, bEnd) {
   return new Date(aStart) < new Date(bEnd) && new Date(bStart) < new Date(aEnd);
 }
 
+
+function subtractPeriodFromPauses(pauses = [], start, end) {
+  const startMs = new Date(start).getTime();
+  const endMs = new Date(end).getTime();
+  const result = [];
+
+  for (const pause of pauses) {
+    if (!pause?.start || !pause?.end) {
+      result.push(pause);
+      continue;
+    }
+
+    const pauseStart = new Date(pause.start).getTime();
+    const pauseEnd = new Date(pause.end).getTime();
+
+    if (endMs <= pauseStart || startMs >= pauseEnd) {
+      result.push(pause);
+      continue;
+    }
+
+    // La période manuelle recouvre le début / milieu / fin d'une pause :
+    // on conserve uniquement les morceaux de pause réellement restants.
+    if (startMs > pauseStart) {
+      result.push({
+        ...pause,
+        id: uid("timeclock_pause"),
+        end: start
+      });
+    }
+
+    if (endMs < pauseEnd) {
+      result.push({
+        ...pause,
+        id: uid("timeclock_pause"),
+        start: end
+      });
+    }
+  }
+
+  return result.sort((a, b) => new Date(a.start) - new Date(b.start));
+}
+
+function validateNoWorkOverlap(segments = []) {
+  const sorted = [...segments]
+    .filter(segment => segment?.start && segment?.end)
+    .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  for (let i = 1; i < sorted.length; i += 1) {
+    if (segmentsOverlap(
+      sorted[i - 1].start,
+      sorted[i - 1].end,
+      sorted[i].start,
+      sorted[i].end
+    )) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function dayStatusLabel(day) {
   if (!day) return "Pas encore pointé";
   if (day.status === "working") return "En travail";
@@ -267,6 +328,11 @@ async function punch(label) {
   }
 
   if (current.status === "paused") {
+    if ((current.segments || []).length >= 3) {
+      alert("Cette journée contient déjà 3 périodes de travail. Termine la journée ou corrige une période existante.");
+      return current;
+    }
+
     const pauses = [...(current.pauses || [])];
     const index = pauses.findLastIndex(pause => !pause.end);
     if (index >= 0) pauses[index] = { ...pauses[index], end: time };
@@ -413,7 +479,8 @@ function currentAction(day) {
     return {
       label: "Pointer mon arrivée",
       hint: "Le premier clic démarre ta journée.",
-      className: "arrival"
+      className: "arrival",
+      disabled: false
     };
   }
 
@@ -421,14 +488,25 @@ function currentAction(day) {
     return {
       label: "Début de pause",
       hint: "Le clic ferme le temps de travail en cours.",
-      className: "pause"
+      className: "pause",
+      disabled: false
+    };
+  }
+
+  if ((day.segments || []).length >= 3) {
+    return {
+      label: "3 périodes atteintes",
+      hint: "Termine ta journée ou corrige les périodes existantes.",
+      className: "limit",
+      disabled: true
     };
   }
 
   return {
     label: "Reprendre le travail",
     hint: "Le clic termine la pause et démarre un nouveau temps.",
-    className: "resume"
+    className: "resume",
+    disabled: false
   };
 }
 
@@ -456,12 +534,17 @@ function startLiveRefresh(container) {
   }, 1000);
 }
 
-async function showManualPeriodModal(container, presetDate = todayISO()) {
+async function showManualPeriodModal(container, presetDate = "", lockDate = false) {
+  const fixedDate = presetDate || "";
+  const dateBounds = lockDate && fixedDate
+    ? `min="${escapeHtml(fixedDate)}" max="${escapeHtml(fixedDate)}"`
+    : `max="${escapeHtml(todayISO())}"`;
+
   openModal(`
     <div class="modal-head">
       <div>
         <p class="eyebrow">BADGEUSE</p>
-        <h2>Ajouter une période manuellement</h2>
+        <h2>Ajouter une période</h2>
       </div>
       <button class="icon-btn" id="timeclock-manual-close">×</button>
     </div>
@@ -469,12 +552,14 @@ async function showManualPeriodModal(container, presetDate = todayISO()) {
     <form class="form-grid" id="timeclock-manual-form">
       <div class="field">
         <label for="timeclock-manual-date">Date</label>
-        <input id="timeclock-manual-date" type="date" name="date" value="${escapeHtml(presetDate || todayISO())}" required>
+        <input id="timeclock-manual-date" type="date" name="date"
+          value="${escapeHtml(fixedDate)}" ${dateBounds} required>
       </div>
 
       <div class="field">
-        <label for="timeclock-manual-label">Nom du temps</label>
-        <input id="timeclock-manual-label" name="label" maxlength="80" value="Travail" placeholder="Ex : IWS, TMA, Réunion…" required>
+        <label for="timeclock-manual-label">Nom du temps <span aria-hidden="true">*</span></label>
+        <input id="timeclock-manual-label" name="label" maxlength="80"
+          value="" placeholder="Ex : IWS, TMA, Réunion…" required>
       </div>
 
       <div class="row">
@@ -488,8 +573,8 @@ async function showManualPeriodModal(container, presetDate = todayISO()) {
         </div>
       </div>
 
-      <div class="timeclock-manual-note">
-        Tu peux ajouter une période oubliée aujourd’hui ou sur une journée passée. Elle sera automatiquement ajoutée aux cumuls.
+      <div class="timeclock-manual-note" id="timeclock-manual-note">
+        Maximum 3 périodes par journée. Aucun chevauchement entre deux périodes de travail.
       </div>
 
       <div class="actions">
@@ -504,18 +589,27 @@ async function showManualPeriodModal(container, presetDate = todayISO()) {
 
   document.querySelector("#timeclock-manual-form")?.addEventListener("submit", async event => {
     event.preventDefault();
-    const fd = new FormData(event.currentTarget);
-    const date = String(fd.get("date") || "");
-    const label = String(fd.get("label") || "").trim() || "Travail";
-    const start = localDateTime(date, String(fd.get("start") || ""));
-    const end = localDateTime(date, String(fd.get("end") || ""));
 
-    if (!date || !start || !end) {
-      alert("Renseigne la date, l’heure de début et l’heure de fin.");
+    const fd = new FormData(event.currentTarget);
+    const date = String(fd.get("date") || "").trim();
+    const label = String(fd.get("label") || "").trim();
+    const startValue = String(fd.get("start") || "");
+    const endValue = String(fd.get("end") || "");
+
+    if (!date || !label || !startValue || !endValue) {
+      alert("La date, le nom du temps, l’heure de début et l’heure de fin sont obligatoires.");
       return;
     }
 
-    if (new Date(end) <= new Date(start)) {
+    if (date > todayISO()) {
+      alert("Tu ne peux pas ajouter une période dans le futur.");
+      return;
+    }
+
+    const start = localDateTime(date, startValue);
+    const end = localDateTime(date, endValue);
+
+    if (!start || !end || new Date(end) <= new Date(start)) {
       alert("L’heure de fin doit être postérieure à l’heure de début.");
       return;
     }
@@ -523,10 +617,22 @@ async function showManualPeriodModal(container, presetDate = todayISO()) {
     const existing = await getOne("moduleData", dayId(date)).catch(() => null);
     const existingSegments = existing?.segments || [];
 
-    if (existingSegments.some(segment =>
-      segmentsOverlap(start, end, segment.start, segment.end || (existing?.status === "working" ? nowIso() : null))
-    )) {
-      alert("Cette période chevauche déjà une période de travail enregistrée.");
+    if (existingSegments.length >= 3) {
+      alert("Cette journée contient déjà 3 périodes de travail. Tu peux modifier une période existante, mais pas en ajouter une quatrième.");
+      return;
+    }
+
+    const overlap = existingSegments.some(segment => {
+      const segmentEnd = segment.end || (
+        existing?.status === "working" && date === todayISO()
+          ? nowIso()
+          : null
+      );
+      return segmentsOverlap(start, end, segment.start, segmentEnd);
+    });
+
+    if (overlap) {
+      alert("Impossible d’ajouter cette période : elle chevauche une période de travail déjà enregistrée.");
       return;
     }
 
@@ -545,28 +651,33 @@ async function showManualPeriodModal(container, presetDate = todayISO()) {
       updatedAt: now
     };
 
+    const nextSegments = [
+      ...(base.segments || []),
+      {
+        id: uid("timeclock_work"),
+        label,
+        start,
+        end,
+        manual: true
+      }
+    ].sort((a, b) => new Date(a.start) - new Date(b.start));
+
+    const nextPauses = subtractPeriodFromPauses(base.pauses || [], start, end);
+
     const next = normalizeDayFromSegments({
       ...base,
-      segments: [
-        ...(base.segments || []),
-        {
-          id: uid("timeclock_work"),
-          label,
-          start,
-          end,
-          manual: true
-        }
-      ],
+      segments: nextSegments,
+      pauses: nextPauses,
       updatedAt: now
     });
 
-    // Pour une journée passée / terminée, recalcule le départ sur la dernière période.
     if (date !== todayISO() || next.status === "finished") {
       const lastEnd = next.segments
         .map(segment => segment.end)
         .filter(Boolean)
         .sort((a, b) => new Date(a) - new Date(b))
         .at(-1);
+
       next.departedAt = lastEnd || next.departedAt || null;
       next.status = "finished";
     }
@@ -577,8 +688,14 @@ async function showManualPeriodModal(container, presetDate = todayISO()) {
     window.dispatchEvent(new CustomEvent("myhub:data-changed"));
   });
 
-  setTimeout(() => document.querySelector("#timeclock-manual-start")?.focus(), 0);
+  setTimeout(() => {
+    const target = fixedDate
+      ? document.querySelector("#timeclock-manual-label")
+      : document.querySelector("#timeclock-manual-date");
+    target?.focus();
+  }, 0);
 }
+
 
 async function showDayEditor(day, container) {
   const segments = day.segments || [];
@@ -588,19 +705,30 @@ async function showDayEditor(day, container) {
     <div class="modal-head">
       <div>
         <p class="eyebrow">BADGEUSE</p>
-        <h2>Corriger le ${escapeHtml(formatDate(day.date))}</h2>
+        <h2>${escapeHtml(formatDate(day.date))}</h2>
       </div>
       <button class="icon-btn" id="timeclock-edit-close">×</button>
     </div>
 
     <form class="form-grid" id="timeclock-edit-form">
+      <div class="timeclock-day-open-actions">
+        <div>
+          <strong>${segments.length} période${segments.length > 1 ? "s" : ""} de travail</strong>
+          <span>Maximum 3 périodes par journée.</span>
+        </div>
+        <button type="button" class="ghost-btn" id="timeclock-edit-add-period"
+          ${segments.length >= 3 ? "disabled" : ""}>
+          ${segments.length >= 3 ? "3 périodes max" : "+ Ajouter une période"}
+        </button>
+      </div>
+
       <div class="timeclock-edit-section">
         <strong>Temps de travail</strong>
         ${segments.length ? segments.map((segment, index) => `
           <div class="timeclock-edit-row">
             <div class="field timeclock-edit-label">
               <label>Nom</label>
-              <input name="segmentLabel_${index}" maxlength="80" value="${escapeHtml(segment.label || "Travail")}">
+              <input name="segmentLabel_${index}" maxlength="80" value="${escapeHtml(segment.label || "")}" required>
             </div>
             <div class="field">
               <label>Début</label>
@@ -640,13 +768,18 @@ async function showDayEditor(day, container) {
   document.querySelector("#timeclock-edit-close")?.addEventListener("click", closeModal);
   document.querySelector("#timeclock-edit-cancel")?.addEventListener("click", closeModal);
 
+  document.querySelector("#timeclock-edit-add-period")?.addEventListener("click", () => {
+    closeModal();
+    showManualPeriodModal(container, day.date, true);
+  });
+
   document.querySelector("#timeclock-edit-form")?.addEventListener("submit", async event => {
     event.preventDefault();
     const fd = new FormData(event.currentTarget);
 
     const nextSegments = segments.map((segment, index) => ({
       ...segment,
-      label: String(fd.get(`segmentLabel_${index}`) || "Travail").trim() || "Travail",
+      label: String(fd.get(`segmentLabel_${index}`) || "").trim(),
       start: localDateTime(day.date, String(fd.get(`segmentStart_${index}`) || "")),
       end: localDateTime(day.date, String(fd.get(`segmentEnd_${index}`) || ""))
     }));
@@ -656,6 +789,16 @@ async function showDayEditor(day, container) {
       start: localDateTime(day.date, String(fd.get(`pauseStart_${index}`) || "")),
       end: localDateTime(day.date, String(fd.get(`pauseEnd_${index}`) || ""))
     }));
+
+    if (nextSegments.some(segment => !segment.label)) {
+      alert("Le nom de chaque période de travail est obligatoire.");
+      return;
+    }
+
+    if (!validateNoWorkOverlap(nextSegments)) {
+      alert("Deux périodes de travail ne peuvent pas se chevaucher.");
+      return;
+    }
 
     for (const row of [...nextSegments, ...nextPauses]) {
       if (row.start && row.end && new Date(row.end) <= new Date(row.start)) {
@@ -744,7 +887,7 @@ export async function renderTimeclock(container) {
           <input id="timeclock-label" maxlength="80" value="${escapeHtml(currentLabel || "Travail")}" placeholder="Ex : IWS, TMA, Réunion, Administratif…">
         </div>
 
-        <button class="timeclock-punch-btn ${action.className}" id="timeclock-punch">
+        <button class="timeclock-punch-btn ${action.className}" id="timeclock-punch" ${action.disabled ? "disabled" : ""}>
           <span>${action.label}</span>
           <small>${action.hint}</small>
         </button>
@@ -814,8 +957,9 @@ export async function renderTimeclock(container) {
         <div class="timeclock-section-head">
           <div>
             <h3>Historique</h3>
-            <p>Les 30 derniers jours pointés. Touche une journée pour la corriger.</p>
+            <p>Ouvre une journée pour la corriger ou lui ajouter une période.</p>
           </div>
+          <button class="ghost-btn" id="timeclock-add-past-day">+ Ajouter une journée passée</button>
         </div>
         <div class="timeclock-history">
           ${days.length ? days.slice(0, 30).map(historyRow).join("") : `<div class="timeclock-empty">Ton historique apparaîtra ici après ton premier pointage.</div>`}
@@ -831,12 +975,16 @@ export async function renderTimeclock(container) {
 
   const labelInput = container.querySelector("#timeclock-label");
 
+  container.querySelector("#timeclock-add-past-day")?.addEventListener("click", () => {
+    showManualPeriodModal(container, "", false);
+  });
+
   container.querySelector("#timeclock-add-manual")?.addEventListener("click", () => {
-    showManualPeriodModal(container, todayISO());
+    showManualPeriodModal(container, todayISO(), true);
   });
 
   container.querySelector("#timeclock-add-manual-today")?.addEventListener("click", () => {
-    showManualPeriodModal(container, todayISO());
+    showManualPeriodModal(container, todayISO(), true);
   });
 
   container.querySelector("#timeclock-punch")?.addEventListener("click", async () => {

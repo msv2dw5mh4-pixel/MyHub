@@ -32,6 +32,7 @@ import { syncSportPlanTasks } from "./core/sport_planner.js";
 import { syncLivingCareTasks } from "./core/living_tasks.js";
 import { syncPeopleReminderTasks } from "./core/people_tasks.js";
 import { runDataIntegrityRepair } from "./core/integrity.js";
+import { getModuleActivationState, getModuleByRoute, isRouteActive } from "./core/modules.js";
 import { startAppUpdateWatcher } from "./core/updater.js";
 
 const view = document.getElementById("view");
@@ -67,6 +68,10 @@ const routes = {
 let currentRoute = "dashboard";
 
 async function navigate(routeName) {
+  if (!(await isRouteActive(routeName))) {
+    routeName = "modules";
+  }
+
   const route = routes[routeName] || routes.dashboard;
   currentRoute = routes[routeName] ? routeName : "dashboard";
   pageTitle.textContent = route.title;
@@ -79,7 +84,7 @@ async function navigate(routeName) {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
-function showQuickAdd() {
+async function showQuickAdd() {
   openModal(`
     <div class="modal-head">
       <div>
@@ -204,48 +209,74 @@ function showQuickAdd() {
     </div>
   `);
 
+  const activation = await getModuleActivationState();
+  const activeIds = new Set(activation.activeIds);
+  const quickModuleMap = {
+    "quick-add-task": "tasks",
+    "quick-add-stock": "stock",
+    "quick-add-tracker": "tracker",
+    "quick-add-sport": "sport",
+    "quick-add-objective": "objectives",
+    "quick-add-planning": "planning",
+    "quick-add-maintenance": "maintenance",
+    "quick-add-living": "living",
+    "quick-add-document": "documents",
+    "quick-add-budget": "budget",
+    "quick-add-project": "projects",
+    "quick-add-learning": "learning",
+    "quick-add-idea": "ideas",
+    "quick-add-person": "people",
+    "quick-add-rental": "rental",
+    "quick-add-meal": "meals",
+    "quick-add-shopping": "shopping"
+  };
+  Object.entries(quickModuleMap).forEach(([buttonId, moduleId]) => {
+    const button = document.getElementById(buttonId);
+    if (button && !activeIds.has(moduleId)) button.remove();
+  });
+
   document.getElementById("quick-add-close").addEventListener("click", closeModal);
-  document.getElementById("quick-add-task").addEventListener("click", () => {
+  document.getElementById("quick-add-task")?.addEventListener("click", () => {
     closeModal();
     showAddTaskModal();
   });
-  document.getElementById("quick-add-stock").addEventListener("click", () => {
+  document.getElementById("quick-add-stock")?.addEventListener("click", () => {
     closeModal();
     requestNewProduct();
   });
-  document.getElementById("quick-add-tracker").addEventListener("click", () => {
+  document.getElementById("quick-add-tracker")?.addEventListener("click", () => {
     closeModal();
     requestNewTrackerItem();
   });
-  document.getElementById("quick-add-sport").addEventListener("click", () => {
+  document.getElementById("quick-add-sport")?.addEventListener("click", () => {
     closeModal();
     requestNewSportActivity();
   });
-  document.getElementById("quick-add-objective").addEventListener("click", () => {
+  document.getElementById("quick-add-objective")?.addEventListener("click", () => {
     closeModal();
     requestNewObjective();
   });
-  document.getElementById("quick-add-planning").addEventListener("click", () => {
+  document.getElementById("quick-add-planning")?.addEventListener("click", () => {
     closeModal();
     requestNewPlanningEvent();
   });
-  document.getElementById("quick-add-maintenance").addEventListener("click", () => {
+  document.getElementById("quick-add-maintenance")?.addEventListener("click", () => {
     closeModal();
     requestNewMaintenanceAsset();
   });
-  document.getElementById("quick-add-living").addEventListener("click", () => {
+  document.getElementById("quick-add-living")?.addEventListener("click", () => {
     closeModal();
     requestNewLivingItem();
   });
-  document.getElementById("quick-add-document").addEventListener("click", () => { closeModal(); requestNewDocument(); });
-  document.getElementById("quick-add-budget").addEventListener("click", () => { closeModal(); requestNewBudgetEntry(); });
-  document.getElementById("quick-add-project").addEventListener("click", () => { closeModal(); requestNewProject(); });
-  document.getElementById("quick-add-learning").addEventListener("click", () => { closeModal(); requestNewLearningTopic(); });
-  document.getElementById("quick-add-idea").addEventListener("click", () => { closeModal(); requestNewIdea(); });
-  document.getElementById("quick-add-person").addEventListener("click", () => { closeModal(); requestNewPerson(); });
-  document.getElementById("quick-add-rental").addEventListener("click", () => { closeModal(); requestNewRentalBooking(); });
-  document.getElementById("quick-add-meal").addEventListener("click", () => { closeModal(); requestNewMeal(); });
-  document.getElementById("quick-add-shopping").addEventListener("click", () => { closeModal(); requestNewShoppingItem(); });
+  document.getElementById("quick-add-document")?.addEventListener("click", () => { closeModal(); requestNewDocument(); });
+  document.getElementById("quick-add-budget")?.addEventListener("click", () => { closeModal(); requestNewBudgetEntry(); });
+  document.getElementById("quick-add-project")?.addEventListener("click", () => { closeModal(); requestNewProject(); });
+  document.getElementById("quick-add-learning")?.addEventListener("click", () => { closeModal(); requestNewLearningTopic(); });
+  document.getElementById("quick-add-idea")?.addEventListener("click", () => { closeModal(); requestNewIdea(); });
+  document.getElementById("quick-add-person")?.addEventListener("click", () => { closeModal(); requestNewPerson(); });
+  document.getElementById("quick-add-rental")?.addEventListener("click", () => { closeModal(); requestNewRentalBooking(); });
+  document.getElementById("quick-add-meal")?.addEventListener("click", () => { closeModal(); requestNewMeal(); });
+  document.getElementById("quick-add-shopping")?.addEventListener("click", () => { closeModal(); requestNewShoppingItem(); });
 }
 
 document.querySelectorAll("[data-route]").forEach(btn => {
@@ -258,12 +289,22 @@ document.getElementById("quick-add").addEventListener("click", showQuickAdd);
 
 window.addEventListener("myhub:navigate", event => navigate(event.detail));
 
+window.addEventListener("myhub:modules-changed", async () => {
+  if (!(await isRouteActive(currentRoute))) {
+    await navigate("modules");
+    return;
+  }
+  if (currentRoute === "dashboard") await navigate("dashboard");
+});
+
 window.addEventListener("myhub:data-changed", async () => {
   try {
-    await syncTrackerForToday();
-    await syncLivingCareTasks();
-    await syncPeopleReminderTasks();
-    await ensureMealsSeeded();
+    const activation = await getModuleActivationState();
+    const active = new Set(activation.activeIds);
+    if (active.has("tracker")) await syncTrackerForToday();
+    if (active.has("living")) await syncLivingCareTasks();
+    if (active.has("people")) await syncPeopleReminderTasks();
+    if (active.has("meals")) await ensureMealsSeeded();
   } catch (error) {
     console.error("Synchronisation Tracker :", error);
   }
@@ -278,17 +319,17 @@ if ("serviceWorker" in navigator) {
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (reloadingForServiceWorker) return;
-    if (sessionStorage.getItem("myhub-sw-reloaded-v33.4") === "1") return;
+    if (sessionStorage.getItem("myhub-sw-reloaded-v33.6") === "1") return;
 
     reloadingForServiceWorker = true;
-    sessionStorage.setItem("myhub-sw-reloaded-v33.4", "1");
+    sessionStorage.setItem("myhub-sw-reloaded-v33.6", "1");
     window.location.reload();
   });
 
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(
-        "./service-worker.js?v=33.4",
+        "./service-worker.js?v=33.6",
         { updateViaCache: "none" }
       );
 
@@ -303,16 +344,18 @@ if ("serviceWorker" in navigator) {
   try {
     await clearMyHubBadge();
     await runDataIntegrityRepair();
-    startMyHubReminderScheduler();
-    await syncRecurringObjectiveTasks(7);
-    await syncMaintenanceTasks();
-    await syncDocumentTasks();
-    await syncLearningObjective();
-    await syncSportPlanTasks();
-    await syncTrackerForToday();
-    await syncLivingCareTasks();
-    await syncPeopleReminderTasks();
-    await ensureMealsSeeded();
+    const activation = await getModuleActivationState();
+    const active = new Set(activation.activeIds);
+    if (active.has("notifications")) startMyHubReminderScheduler();
+    if (active.has("objectives")) await syncRecurringObjectiveTasks(7);
+    if (active.has("maintenance")) await syncMaintenanceTasks();
+    if (active.has("documents")) await syncDocumentTasks();
+    if (active.has("learning")) await syncLearningObjective();
+    if (active.has("sport")) await syncSportPlanTasks();
+    if (active.has("tracker")) await syncTrackerForToday();
+    if (active.has("living")) await syncLivingCareTasks();
+    if (active.has("people")) await syncPeopleReminderTasks();
+    if (active.has("meals")) await ensureMealsSeeded();
   } catch (error) {
     console.error("Synchronisation MyHub :", error);
   }

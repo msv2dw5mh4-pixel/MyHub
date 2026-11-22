@@ -1,3 +1,11 @@
+# MyHub V33.6 — Modules progressifs
+
+MyHub fonctionne désormais avec un noyau réduit et une bibliothèque de modules activables à la demande. Désactiver un module ne supprime aucune donnée.
+
+# MyHub V33.5 — Badgeuse rétroactive
+
+La Badgeuse accepte maintenant jusqu’à trois périodes de travail par jour. Une journée passée peut être créée depuis l’historique et une journée déjà terminée peut recevoir une période supplémentaire. Les noms sont obligatoires et les chevauchements sont bloqués.
+
 # MyHub V33.4 — Mises à jour intégrées
 
 MyHub dispose maintenant de son propre mécanisme de détection et d’installation des nouvelles versions. `version.json` sert de source de vérité distante et est toujours demandé sans cache. Les Réglages affichent la version installée et la dernière version disponible, avec un bouton de mise à jour lorsque nécessaire.

@@ -21,6 +21,7 @@ import { getPeopleSummary } from "./people.js";
 import { getMealsSummary } from "./meals.js";
 import { getShoppingSummary } from "./shopping.js";
 import { getRentalSummary } from "./rental.js";
+import { getModuleActivationState, getModuleByRoute } from "../core/modules.js";
 
 function formatMoney(value) {
   return new Intl.NumberFormat("fr-FR", {
@@ -98,10 +99,13 @@ function bindRoutes(container) {
 }
 
 export async function renderDashboard(container) {
-  await syncMaintenanceTasks();
-  await syncDocumentTasks();
-  await syncLearningObjective();
-  await syncLivingCareTasks();
+  const activation = await getModuleActivationState();
+  const activeModuleIds = new Set(activation.activeIds);
+
+  if (activeModuleIds.has("maintenance")) await syncMaintenanceTasks();
+  if (activeModuleIds.has("documents")) await syncDocumentTasks();
+  if (activeModuleIds.has("learning")) await syncLearningObjective();
+  if (activeModuleIds.has("living")) await syncLivingCareTasks();
 
   const [
     planning,
@@ -488,6 +492,11 @@ export async function renderDashboard(container) {
       </section>
     </section>
   `;
+
+  container.querySelectorAll("[data-route]").forEach(node => {
+    const module = getModuleByRoute(node.dataset.route);
+    if (module && !activeModuleIds.has(module.id)) node.remove();
+  });
 
   bindRoutes(container);
   container.querySelector("#dashboard-quick-add")?.addEventListener("click", () => {

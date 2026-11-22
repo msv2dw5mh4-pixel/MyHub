@@ -1,4 +1,4 @@
-const CACHE = "myhub-v33-4-integrated-updater";
+const CACHE = "myhub-v33-6-progressive-modules";
 
 const ASSETS = [
   "./",

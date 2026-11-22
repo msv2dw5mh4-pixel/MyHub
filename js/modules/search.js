@@ -1,5 +1,6 @@
 import { getAll } from "../core/db.js";
 import { escapeHtml } from "../core/ui.js";
+import { getModuleActivationState, getModuleByRoute } from "../core/modules.js";
 
 let query = "";
 let lastContainer = null;
@@ -63,8 +64,15 @@ async function searchAll(term) {
   const needle = normalize(term);
   if (needle.length < 2) return [];
 
+  const activation = await getModuleActivationState();
+  const activeIds = new Set(activation.activeIds);
+  const activeSources = SOURCES.filter(source => {
+    const module = getModuleByRoute(source.route);
+    return !module || activeIds.has(module.id);
+  });
+
   const results = [];
-  const datasets = await Promise.all(SOURCES.map(async source => {
+  const datasets = await Promise.all(activeSources.map(async source => {
     try { return [source, await getAll(source.store)]; }
     catch { return [source, []]; }
   }));
@@ -96,6 +104,7 @@ async function searchAll(term) {
 
 
   try {
+    if (!activeIds.has("people")) throw new Error("MODULE_DISABLED");
     const [people, groups, relations, events] = await Promise.all([
       getAll("people"),
       getAll("peopleGroups"),
@@ -151,7 +160,7 @@ async function searchAll(term) {
       });
     }
   } catch (error) {
-    console.warn("Recherche Personnes indisponible :", error);
+    if (error?.message !== "MODULE_DISABLED") console.warn("Recherche Personnes indisponible :", error);
   }
 
   return results
