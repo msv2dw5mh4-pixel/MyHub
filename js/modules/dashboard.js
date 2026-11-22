@@ -47,7 +47,7 @@ function formatDuration(minutes) {
 
 function moduleCard({ icon, name, value, sub, route }) {
   return `
-    <article class="dashboard-module" data-route="${route}">
+    <article class="dashboard-module dashboard-tone-${route}" data-route="${route}">
       <div class="icon">${icon}</div>
       <div class="label">${name}</div>
       <div class="value">${value}</div>

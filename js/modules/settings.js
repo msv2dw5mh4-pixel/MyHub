@@ -1,6 +1,7 @@
 import { escapeHtml, openModal, closeModal } from "../core/ui.js";
 import { APP_VERSION, RELEASE_INFO } from "../core/version.js";
 import { checkForAppUpdate, installAvailableUpdate } from "../core/updater.js";
+import { getThemePreference, setThemePreference } from "../core/theme.js";
 import {
   prepareBackup,
   downloadBackupRaw,
@@ -141,6 +142,7 @@ async function showImportPreview(parsed, input) {
 
 export async function renderSettings(container) {
   const status = await getBackupStatus();
+  const themePreference = getThemePreference();
 
   const lastText = status.last
     ? formatBackupDate(status.last.date)
@@ -160,6 +162,34 @@ export async function renderSettings(container) {
       </div>
 
       <div class="settings-list">
+
+
+        <article class="setting-card settings-appearance-card">
+          <div class="settings-appearance-head">
+            <div>
+              <span class="settings-version-eyebrow">APPARENCE</span>
+              <strong>Thème de MyHub</strong>
+              <p class="muted">Choisis le style qui te convient. « Auto » suit le réglage de ton iPhone.</p>
+            </div>
+          </div>
+          <div class="theme-choice-grid" role="radiogroup" aria-label="Thème de MyHub">
+            <button class="theme-choice ${themePreference === "dark" ? "active" : ""}" data-theme-choice="dark" type="button">
+              <span class="theme-preview dark"><i></i><i></i><i></i></span>
+              <strong>Sombre</strong>
+              <small>Le style MyHub premium</small>
+            </button>
+            <button class="theme-choice ${themePreference === "light" ? "active" : ""}" data-theme-choice="light" type="button">
+              <span class="theme-preview light"><i></i><i></i><i></i></span>
+              <strong>Clair</strong>
+              <small>Plus lumineux en journée</small>
+            </button>
+            <button class="theme-choice ${themePreference === "auto" ? "active" : ""}" data-theme-choice="auto" type="button">
+              <span class="theme-preview auto"><i></i><i></i><i></i></span>
+              <strong>Auto</strong>
+              <small>Suit ton iPhone</small>
+            </button>
+          </div>
+        </article>
 
         <article class="setting-card settings-version-card">
           <div class="settings-version-head">
@@ -257,6 +287,15 @@ export async function renderSettings(container) {
       </div>
     </section>
   `;
+
+  container.querySelectorAll("[data-theme-choice]").forEach(button => {
+    button.addEventListener("click", () => {
+      setThemePreference(button.dataset.themeChoice);
+      container.querySelectorAll("[data-theme-choice]").forEach(item => {
+        item.classList.toggle("active", item === button);
+      });
+    });
+  });
 
   const latestVersionEl = container.querySelector("#settings-latest-version");
   const updateStatusEl = container.querySelector("#settings-update-status");

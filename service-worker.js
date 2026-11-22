@@ -1,4 +1,4 @@
-const CACHE = "myhub-v33-6-progressive-modules";
+const CACHE = "myhub-v33-7-dark-ui";
 
 const ASSETS = [
   "./",
@@ -27,6 +27,7 @@ const ASSETS = [
   "./js/app.js",
   "./js/core/db.js",
   "./js/core/version.js",
+  "./js/core/theme.js",
   "./js/core/updater.js",
   "./js/core/modules.js",
   "./js/core/ui.js",

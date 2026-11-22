@@ -8,23 +8,32 @@ function sorted(rows) {
   return [...rows].sort((a, b) => Number(a.order || 999) - Number(b.order || 999));
 }
 
+function groupName(module) {
+  return moduleGroups.find(group => group.id === module.group)?.name || "Module";
+}
+
 function moduleCard(module, active) {
   return `
-    <article class="modules-v36-card ${active ? "is-active" : "is-available"}"
-      data-module-search="${normalize(`${module.name} ${module.description}`)}">
-      <button class="modules-v36-open" data-module-route="${module.route}" ${active ? "" : "disabled"}>
-        <div class="modules-v27-icon">${module.icon}</div>
-        <div class="modules-v27-copy">
-          <strong>${module.name}</strong>
-          <span>${module.description}</span>
-        </div>
+    <article class="modules-v37-card module-tone-${module.id} ${active ? "is-active" : "is-available"}"
+      data-module-search="${normalize(`${module.name} ${module.description} ${groupName(module)}`)}">
+      <button class="modules-v37-open" data-module-route="${module.route}" ${active ? "" : "disabled"}>
+        <div class="modules-v37-icon">${module.icon}</div>
+        <span class="modules-v37-category">${groupName(module)}</span>
+        <strong>${module.name}</strong>
+        <p>${module.description}</p>
       </button>
-      <div class="modules-v36-actions">
+      <div class="modules-v37-footer">
         ${module.core
-          ? `<span class="modules-v36-core">Noyau MyHub</span>`
+          ? `<span class="modules-v37-status core">Noyau</span>`
           : active
-            ? `<button class="ghost-btn modules-v36-toggle" data-module-toggle="${module.id}" data-next-state="off">Désactiver</button>`
-            : `<button class="primary-btn modules-v36-toggle" data-module-toggle="${module.id}" data-next-state="on">Activer</button>`
+            ? `<span class="modules-v37-status active">✓ Activé</span>`
+            : `<span class="modules-v37-status inactive">Désactivé</span>`
+        }
+        ${module.core
+          ? ""
+          : active
+            ? `<button class="modules-v37-toggle" data-module-toggle="${module.id}" data-next-state="off" aria-label="Désactiver ${module.name}">Désactiver</button>`
+            : `<button class="modules-v37-toggle activate" data-module-toggle="${module.id}" data-next-state="on" aria-label="Activer ${module.name}">Activer</button>`
         }
       </div>
     </article>
@@ -59,15 +68,7 @@ export async function renderModules(container) {
           <span>${activeModules.length}</span>
         </div>
         <div class="modules-v36-grid">
-          ${moduleGroups.map(group => {
-            const rows = sorted(activeModules.filter(module => module.group === group.id));
-            if (!rows.length) return "";
-            return `
-              <div class="modules-v36-group" data-module-group>
-                <div class="modules-v36-group-label"><strong>${group.name}</strong><span>${group.description}</span></div>
-                ${rows.map(module => moduleCard(module, true)).join("")}
-              </div>`;
-          }).join("")}
+          ${sorted(activeModules).map(module => moduleCard(module, true)).join("")}
         </div>
       </section>
 
@@ -77,15 +78,7 @@ export async function renderModules(container) {
           <span>${availableModules.length}</span>
         </div>
         <div class="modules-v36-grid">
-          ${moduleGroups.map(group => {
-            const rows = sorted(availableModules.filter(module => module.group === group.id));
-            if (!rows.length) return "";
-            return `
-              <div class="modules-v36-group" data-module-group>
-                <div class="modules-v36-group-label"><strong>${group.name}</strong><span>${group.description}</span></div>
-                ${rows.map(module => moduleCard(module, false)).join("")}
-              </div>`;
-          }).join("") || `<div class="empty">Tous les modules sont actifs.</div>`}
+          ${sorted(availableModules).map(module => moduleCard(module, false)).join("") || `<div class="empty">Tous les modules sont actifs.</div>`}
         </div>
       </section>
 
@@ -118,7 +111,6 @@ export async function renderModules(container) {
 
   const input = container.querySelector("#modules-filter");
   const cards = [...container.querySelectorAll("[data-module-search]")];
-  const groups = [...container.querySelectorAll("[data-module-group]")];
   const sections = [...container.querySelectorAll("[data-module-section]")];
   const empty = container.querySelector("#modules-empty");
 
@@ -129,10 +121,6 @@ export async function renderModules(container) {
       const show = !query || card.dataset.moduleSearch.includes(query);
       card.hidden = !show;
       if (show) visible += 1;
-    });
-    groups.forEach(group => {
-      const groupCards = [...group.querySelectorAll("[data-module-search]")];
-      group.hidden = !groupCards.some(card => !card.hidden);
     });
     sections.forEach(section => {
       const sectionCards = [...section.querySelectorAll("[data-module-search]")];

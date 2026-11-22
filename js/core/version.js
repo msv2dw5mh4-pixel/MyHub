@@ -1,17 +1,19 @@
-export const APP_VERSION = "V33.6";
+export const APP_VERSION = "V33.7";
 
 export const RELEASE_INFO = {
   version: APP_VERSION,
   date: "22 novembre 2026",
-  title: "MyHub modulaire et progressif",
-  summary: "MyHub démarre maintenant avec un noyau léger et permet d’activer les autres modules uniquement au fur et à mesure des besoins.",
+  title: "Refonte visuelle MyHub",
+  summary: "MyHub adopte une interface plus moderne, plus lisible et pensée pour le mobile, avec un mode sombre premium.",
   details: [
-    "Noyau toujours actif : Tâches, Tracker, Sport et Badgeuse, avec Dashboard et Réglages toujours disponibles.",
-    "Nouvelle bibliothèque de modules avec activation à la demande.",
-    "Un module désactivé disparaît de l’interface mais toutes ses données locales sont conservées.",
-    "Les modules non actifs disparaissent du Dashboard, de la recherche globale et de l’ajout rapide.",
-    "Les synchronisations automatiques des modules désactivés ne tournent plus en arrière-plan.",
-    "Les tâches automatiques provenant de modules désactivés sont masquées jusqu’à leur réactivation.",
-    "La configuration des modules est sauvegardée avec le reste de MyHub."
+    "Nouveau thème sombre inspiré de la direction visuelle choisie.",
+    "Ajout des modes Sombre, Clair et Auto dans les Réglages.",
+    "Le thème sombre est utilisé par défaut tant qu’aucun autre choix n’a été enregistré.",
+    "Refonte visuelle du Dashboard avec cartes colorées et hiérarchie plus nette.",
+    "La page Tâches s’ouvre désormais sur « Toutes les tâches ».",
+    "Les filtres de tâches deviennent plus lisibles et plus compacts.",
+    "Refonte de la sélection des modules sous forme de blocs visuels.",
+    "Les modules actifs et disponibles sont distingués sans supprimer aucune donnée.",
+    "Amélioration globale des cartes, boutons, formulaires, modales et navigation mobile."
   ]
 };

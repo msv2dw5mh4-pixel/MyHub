@@ -32,7 +32,7 @@ import { dismissPeopleReminderTask, syncPeopleReminderTasks } from "../core/peop
 import { getTaskFolders, createTaskFolder, renameTaskFolder, deleteTaskFolder, ensureTaskFolder, sameTaskFolder, DEFAULT_TASK_FOLDER } from "../core/task_folders.js";
 import { getModuleActivationState } from "../core/modules.js";
 
-let activeFilter = "focus";
+let activeFilter = "all";
 let linkedFilter = "all";
 let objectiveContextId = null;
 let taskSearch = "";
@@ -118,6 +118,10 @@ function filterTasks(tasks) {
 
   let filtered;
   switch (activeFilter) {
+    case "all":
+      filtered = tasks.filter(task => !task.done);
+      break;
+
     case "focus":
       filtered = tasks.filter(task =>
         !task.done &&
@@ -364,6 +368,7 @@ export async function renderTasks(container) {
   const visible = filterTasks(tasks);
 
   const today = todayISO();
+  const allOpenCount = tasks.filter(task => !task.done).length;
   const focusCount = tasks.filter(task => !task.done && task.dueDate && task.dueDate <= today).length;
   const upcomingCount = tasks.filter(task => !task.done && !isAutomaticTask(task) && task.dueDate && task.dueDate > today).length;
   const inboxCount = tasks.filter(task => !task.done && !isAutomaticTask(task) && !task.dueDate).length;
@@ -383,9 +388,10 @@ export async function renderTasks(container) {
     <section class="tasks-v32">
       <div class="section-head">
         <div>
-          <h2>Mes tâches</h2>
+          <p class="eyebrow">ORGANISATION</p>
+          <h2>Toutes les tâches</h2>
           <p class="muted" style="margin:4px 0 0">
-            ${tasks.filter(task => !task.done).length} à faire · ${focusCount} à traiter maintenant
+            ${allOpenCount} ouvertes · ${focusCount} à traiter maintenant
           </p>
         </div>
 
@@ -435,6 +441,9 @@ export async function renderTasks(container) {
       </div>
 
       <nav class="task-primary-tabs" aria-label="Vues des tâches">
+        <button class="${activeFilter === "all" ? "active" : ""}" data-filter="all">
+          Toutes <span>${allOpenCount}</span>
+        </button>
         <button class="${activeFilter === "focus" ? "active" : ""}" data-filter="focus">
           À traiter <span>${focusCount}</span>
         </button>
@@ -485,6 +494,7 @@ export async function renderTasks(container) {
       <div class="task-view-heading">
         <div>
           <strong>${
+            activeFilter === "all" ? "Toutes les tâches" :
             activeFilter === "focus" ? "À traiter maintenant" :
             activeFilter === "upcoming" ? "À venir" :
             activeFilter === "no-date" ? "Sans échéance" :
@@ -501,9 +511,11 @@ export async function renderTasks(container) {
           visible.length
             ? visible.map(task => taskRow(task, objectiveMap, projectMap, assetMap, aquariumMap, plantMap, peopleMap)).join("")
             : `<div class="empty task-empty-v32">${
-                activeFilter === "focus"
-                  ? "Rien d'urgent. Les tâches sans date sont maintenant rangées dans « Sans date »."
-                  : "Aucune tâche dans cette vue."
+                activeFilter === "all"
+                  ? "Tout est fait. Aucune tâche ouverte."
+                  : activeFilter === "focus"
+                    ? "Rien d'urgent. Les tâches sans date sont maintenant rangées dans « Sans date »."
+                    : "Aucune tâche dans cette vue."
               }</div>`
         }
       </div>
